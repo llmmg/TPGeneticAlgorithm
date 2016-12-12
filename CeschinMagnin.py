@@ -72,7 +72,7 @@ def load_from_file(file):
         lines = f.readlines()
         for line in lines:
             name, pos_x, pos_y = line.split()
-            c = City(name, pos_x, pos_y)
+            c = City(name, int(pos_x), int(pos_y))
             cities.append(c)
 
     return cities
@@ -98,16 +98,34 @@ def do(cities):
 
     def draw(positions):
         screen.fill(0)
-        for city in positions:
+        for city in cities:
             pygame.draw.circle(screen, city_color, city.get_pos(), city_radius)
         text = font.render("Nombre: %i" % len(positions), True, font_color)
         textRect = text.get_rect()
         screen.blit(text, textRect)
         pygame.display.flip()
 
+    draw(cities)
+
     # ----------------------
     # Affichage du chemin
     # ----------------------
+
+
+    # ----------------------
+    # Boucle pour rester dans l'affichage
+    # ----------------------
+    collecting = True
+
+    while collecting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                collecting = False
+
+    screen.fill(0)
+    pygame.quit()
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
@@ -122,5 +140,5 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 
 if __name__ == '__main__':
-    ga_solve()
-    # ga_solve("ressources12/data/pb005.txt", False)
+    # ga_solve()
+    ga_solve("ressources12/data/pb005.txt", False)
