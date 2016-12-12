@@ -1,5 +1,6 @@
 import sys
 import pygame
+from random import randint
 
 
 class City:
@@ -9,7 +10,6 @@ class City:
 
     def get_pos(self):
         return self.posx, self.posy
-
 
     def __init__(self, name, posx, posy):
         self.name = name
@@ -57,7 +57,7 @@ def draw_gui():
                 collecting = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                cities.append(City("v"+str(len(cities)),pos[0], pos[1]))
+                cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
                 draw(cities)
 
     screen.fill(0)
@@ -112,7 +112,8 @@ def do(cities):
     # ---------------------
 
     # Generate random lists (rnd orders)
-
+    # solution list
+    solList = []
 
     # Natural selection => keep only x best solutions
 
@@ -121,6 +122,7 @@ def do(cities):
 
 
     # Mutations GOTO: natural selection
+    ## GOTO: while loop with condition like 20 time loop or 20% is good...
 
     # ----------------------
     # Affichage du chemin
@@ -141,6 +143,19 @@ def do(cities):
 
     screen.fill(0)
     pygame.quit()
+
+
+# return a list of rndm cities (= a solution)
+def generateRnd(cities):
+    sol = cities;
+
+    #todo: 9% of chance to add the closest city next
+
+    for i in range[0, 10]:
+        index = randint(1, len(sol))
+        sol[index], sol[0] = sol[0], sol[index];
+
+    return sol
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
