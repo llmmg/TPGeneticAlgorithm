@@ -107,6 +107,21 @@ def do(cities):
 
     draw(cities)
 
+    # ---------------------
+    # Algorithm
+    # ---------------------
+
+    # Generate random lists (rnd orders)
+
+
+    # Natural selection => keep only x best solutions
+
+
+    # Cross => childs
+
+
+    # Mutations GOTO: natural selection
+
     # ----------------------
     # Affichage du chemin
     # ----------------------
