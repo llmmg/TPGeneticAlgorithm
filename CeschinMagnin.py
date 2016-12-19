@@ -115,6 +115,8 @@ def do(cities):
     # solution list
     solList = []
     nbSolutions = 100
+
+    # mix iterations
     nbPass = 10
 
     # generate 100 cities
@@ -132,6 +134,8 @@ def do(cities):
             print(cit)
 
     # Natural selection => keep only x best solutions
+    # keep 3/4 best
+    
 
 
     # Cross => childs
