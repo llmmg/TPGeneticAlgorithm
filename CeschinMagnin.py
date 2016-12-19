@@ -119,7 +119,9 @@ def do(cities):
 
     # generate 100 cities
     for i in range(0, nbSolutions):
-        solList.append(generateRnd(cities, nbPass))
+        newSol=generateRnd(cities, nbPass)
+        if newSol not in solList:
+            solList.append(newSol)
 
     # Display generated solutions
     i = 0
@@ -167,10 +169,10 @@ def generateRnd(cities, nPass):
 
     # mix the sol list
     for i in range(0, nPass):
-        index = randint(0, len(sol) - 1)
-        sol[index], sol[0] = sol[0], sol[index]
+        index = randint(1, len(sol) - 1)
+        sol[index], sol[1] = sol[1], sol[index]
 
-    return sol
+    return sol[:]
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
