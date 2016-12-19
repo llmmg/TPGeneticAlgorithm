@@ -30,7 +30,7 @@ class Point:
         self._y = y
 
     def __str__(self):
-        return self._x + " ; " + self._y
+        return str(self._x) + " ; " + str(self._y)
 
     def calculate_distance(self, point):
         return pygame.math.sqrt((point.x() - self.x()) ** 2 + (point.y() - self.y()) ** 2)
@@ -208,6 +208,22 @@ def do(cities):
     # Generate random lists (rnd orders)
     # solution list
     solList = []
+    nbSolutions = 100
+    nbPass = 10
+
+    # generate 100 cities
+    for i in range(0, nbSolutions):
+        newSol=generateRnd(cities, nbPass)
+        if newSol not in solList:
+            solList.append(newSol)
+
+    # Display generated solutions
+    i = 0
+    for sol in solList:
+        i += 1
+        print("solution ", i)
+        for cit in sol:
+            print(cit)
 
     # Natural selection => keep only x best solutions
 
@@ -239,17 +255,18 @@ def do(cities):
     pygame.quit()
 
 
-# return a list of rndm cities (= a solution)
-def generateRnd(cities):
-    sol = cities;
+# return a list of rndm cities (= one solution)
+def generateRnd(cities, nPass):
+    sol = cities[:]
 
     # todo: 9% of chance to add the closest city next
 
-    for i in range[0, 10]:
-        index = randint(1, len(sol))
-        sol[index], sol[0] = sol[0], sol[index];
+    # mix the sol list
+    for i in range(0, nPass):
+        index = randint(1, len(sol) - 1)
+        sol[index], sol[1] = sol[1], sol[index]
 
-    return sol
+    return sol[:]
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
