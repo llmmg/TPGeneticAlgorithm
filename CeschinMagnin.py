@@ -3,21 +3,115 @@ import pygame
 from random import randint
 
 
+# ----------------------------
+# City
+# ----------------------------
 class City:
-    name = ""
-    posx = 0
-    posy = 0
-
-    def get_pos(self):
-        return self.posx, self.posy
-
-    def __init__(self, name, posx, posy):
-        self.name = name
-        self.posx = posx
-        self.posy = posy
+    def __init__(self, name, point):
+        self._name = name
+        self._point = point
 
     def __str__(self):
-        return self.name + " " + str(self.posx) + " " + str(self.posy)
+        return self._name + " at position " + self._point
+
+    def point(self):
+        return self._point
+
+    def name(self):
+        return self._name
+
+
+# ----------------------------
+# Point
+# ----------------------------
+class Point:
+    def __init__(self, x, y):
+        self._x = x
+        self._y = y
+
+    def __str__(self):
+        return str(self._x) + " ; " + str(self._y)
+
+    def calculate_distance(self, point):
+        return pygame.math.sqrt((point.x() - self.x()) ** 2 + (point.y() - self.y()) ** 2)
+
+    def x(self):
+        return self._x
+
+    def y(self):
+        return self._y
+
+    def coords(self):
+        return self._x, self._y
+
+# ----------------------------
+# Population
+# ----------------------------
+class Population:
+    def __init__(self, listSolutions):
+        self._listSolutions = listSolutions
+        self._distancesSum = self.calculateDistance()
+
+    def calculate_distance(self):
+        pass
+
+    def new_generation(self):
+        pass
+
+    def select_roulette(self):
+        pass
+
+    def select_elitism(self):
+        pass
+
+    def mutate(self):
+        pass
+
+    def cross(self):
+        pass
+
+    def elitism_experiment(self):
+        pass
+
+    def get_best_solutions(self):
+        pass
+
+
+# ----------------------------
+# Problem
+# ----------------------------
+class Problem:
+    def __init__(self, cities):
+        self._cities = cities
+
+    def add_city(self, city):
+        self._cities.append(city)
+
+    def get_size(self):
+        return len(self._cities)
+
+    def get_cities(self):
+        return self._cities
+
+
+# ----------------------------
+# Solution
+# ----------------------------
+class Solution:
+    def __init__(self, problem):
+        self._problem = problem
+
+    def calculate_distance(self):
+        return 0
+
+    def mutate(self):
+        pass
+
+    def cross(self):
+        pass
+
+    def problem(self):
+        return self._problem
 
 
 def draw_gui():
@@ -72,7 +166,7 @@ def load_from_file(file):
         lines = f.readlines()
         for line in lines:
             name, pos_x, pos_y = line.split()
-            c = City(name, int(pos_x), int(pos_y))
+            c = City(name, Point(int(pos_x), int(pos_y)))
             cities.append(c)
 
     return cities
@@ -99,7 +193,7 @@ def do(cities):
     def draw(positions):
         screen.fill(0)
         for city in cities:
-            pygame.draw.circle(screen, city_color, city.get_pos(), city_radius)
+            pygame.draw.circle(screen, city_color, city.point().coords(), city_radius)
         text = font.render("Nombre: %i" % len(positions), True, font_color)
         textRect = text.get_rect()
         screen.blit(text, textRect)
