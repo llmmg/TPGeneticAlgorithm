@@ -17,7 +17,7 @@ class City:
         self.posy = posy
 
     def __str__(self):
-        return self.name + " " + self.posx + " " + self.posy
+        return self.name + " " + str(self.posx) + " " + str(self.posy)
 
 
 def draw_gui():
@@ -114,6 +114,20 @@ def do(cities):
     # Generate random lists (rnd orders)
     # solution list
     solList = []
+    nbSolutions = 100
+    nbPass = 10
+
+    # generate 100 cities
+    for i in range(0, nbSolutions):
+        solList.append(generateRnd(cities, nbPass))
+
+    # Display generated solutions
+    i = 0
+    for sol in solList:
+        i += 1
+        print("solution ", i)
+        for cit in sol:
+            print(cit)
 
     # Natural selection => keep only x best solutions
 
@@ -145,15 +159,16 @@ def do(cities):
     pygame.quit()
 
 
-# return a list of rndm cities (= a solution)
-def generateRnd(cities):
-    sol = cities;
+# return a list of rndm cities (= one solution)
+def generateRnd(cities, nPass):
+    sol = cities[:]
 
-    #todo: 9% of chance to add the closest city next
+    # todo: 9% of chance to add the closest city next
 
-    for i in range[0, 10]:
-        index = randint(1, len(sol))
-        sol[index], sol[0] = sol[0], sol[index];
+    # mix the sol list
+    for i in range(0, nPass):
+        index = randint(0, len(sol) - 1)
+        sol[index], sol[0] = sol[0], sol[index]
 
     return sol
 
