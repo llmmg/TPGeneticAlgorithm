@@ -15,6 +15,9 @@ class City:
     def __str__(self):
         return self._name + " at position " + str(self._point)
 
+    def __eq__(self, city2):
+        return self._name == city2.name()
+
     def point(self):
         return self._point
 
@@ -101,6 +104,9 @@ class Problem:
     def get_cities(self):
         return self._cities
 
+    def set_cities(self,newCities):
+        self._cities=newCities
+
 
 # ----------------------------
 # Solution
@@ -124,12 +130,46 @@ class Solution:
 
     def mutate(self):
         cit = self._problem.get_cities()
-        # cit = curentProb.cities
-        index = randint(1, len(cit) - 1)
+        index = randint(2, len(cit) - 1)
         cit[index], cit[1] = cit[1], cit[index]
 
-    def cross(self):
-        pass
+    def cross(self, otherSol):
+        cit = self._problem.get_cities()
+        pt = randint(2, self._problem.get_size() - 2)
+        print("index",pt)
+        # cross with second part
+        seq1 = []
+        seq2 = []
+        othCit = otherSol.problem().get_cities()
+
+        for i in range(pt, len(cit)):
+            seq1.append(cit[i])
+            seq2.append(othCit[i])
+
+        new1 = []
+        new2 = []
+        for i in range(0, len(cit)):
+            if cit[i] not in seq2:
+                new1.append(cit[i])
+            if othCit[i] not in seq1:
+                new2.append(othCit[i])
+
+        new1.extend(seq2)
+        new2.extend(seq1)
+
+        # cit=new1
+        self._problem.set_cities(new1)
+        # othCit=new2
+        otherSol.problem().set_cities(new2)
+
+                # # entre 0,1 et rand-1,rand
+                # # [1,rand[
+                # seq1 = []
+                # seq2 = []
+                # # cities between cross points (0,rand)
+                # for i in range(1, pt):
+                #     seq1.append(cit[i])
+                #     seq2.append(otherSol.problem().get_cities()[i])
 
     def problem(self):
         return self._problem
@@ -257,6 +297,30 @@ def do(cities):
 
     print("shortest way=", population.get_best_solution().distance())
 
+
+    #cross test
+    print("----CROSS TESTS---")
+    print("sol 10=")
+    for cit in solList[9].problem().get_cities():
+        print(cit)
+
+    print("sol 11=")
+    for cit in solList[10].problem().get_cities():
+        print(cit)
+
+    print("---10 CROSS 11---")
+
+    solList[9].cross(solList[10])
+
+    print("sol 10=")
+    for cit in solList[9].problem().get_cities():
+        print(cit)
+
+    print("sol 11=")
+    for cit in solList[10].problem().get_cities():
+        print(cit)
+
+
     # Natural selection => keep only x best solutions
     # keep 3/4 best
 
@@ -320,4 +384,4 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 if __name__ == '__main__':
     # ga_solve()
-    ga_solve("ressources12/data/pb005.txt", False)
+    ga_solve("ressources12/data/pb010.txt", False)
