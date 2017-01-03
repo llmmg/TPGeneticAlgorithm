@@ -12,7 +12,7 @@ class City:
         self._point = point
 
     def __str__(self):
-        return self._name + " at position " + self._point
+        return self._name + " at position " + str(self._point)
 
     def point(self):
         return self._point
@@ -44,16 +44,13 @@ class Point:
     def coords(self):
         return self._x, self._y
 
+
 # ----------------------------
 # Population
 # ----------------------------
 class Population:
     def __init__(self, listSolutions):
         self._listSolutions = listSolutions
-        self._distancesSum = self.calculateDistance()
-
-    def calculate_distance(self):
-        pass
 
     def new_generation(self):
         pass
@@ -73,8 +70,8 @@ class Population:
     def elitism_experiment(self):
         pass
 
-    def get_best_solutions(self):
-        pass
+    def get_best_solution(self):
+        return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
 
 
 # ----------------------------
@@ -100,9 +97,16 @@ class Problem:
 class Solution:
     def __init__(self, problem):
         self._problem = problem
+        self._distance = 0
+        self.calculate_distance()
 
     def calculate_distance(self):
-        return 0
+        self._distance = 0
+        cities = self._problem.get_cities()
+        for i in range(0, self._problem.get_size() - 1):
+            self._distance += cities[i].point().calculate_distance(cities[i + 1].point())
+        # add distance from last city to start city (to complete the loop)
+        self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
         pass
@@ -112,6 +116,9 @@ class Solution:
 
     def problem(self):
         return self._problem
+
+    def distance(self):
+        return self._distance
 
 
 def draw_gui():
@@ -215,7 +222,7 @@ def do(cities):
 
     # generate 100 cities
     for i in range(0, nbSolutions):
-        newSol=generateRnd(cities, nbPass)
+        newSol = generateRnd(cities, nbPass)
         if newSol not in solList:
             solList.append(newSol)
 
@@ -229,7 +236,7 @@ def do(cities):
 
     # Natural selection => keep only x best solutions
     # keep 3/4 best
-    
+
 
 
     # Cross => childs
@@ -281,7 +288,6 @@ def ga_solve(file=None, gui=True, maxtime=0):
         cities = load_from_file(file)
 
     do(cities)
-    pass
 
 
 if __name__ == '__main__':
