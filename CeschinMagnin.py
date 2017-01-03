@@ -59,7 +59,7 @@ class Population:
         population_size = len(self._listSolutions)
 
         # select elites
-        elite_percent = 10
+        elite_percent = 20
         elite_size = int(population_size * elite_percent / 100)
         new_list_solution.extend(self.select_elitism(elite_size))
 
@@ -71,8 +71,8 @@ class Population:
     def select_cross(self, new_list_solution):
         # select random sol from this population
         while True:
-            i1 = randint(0, len(self._listSolutions)-1)
-            i2 = randint(0, len(self._listSolutions)-1)
+            i1 = randint(0, len(self._listSolutions) - 1)
+            i2 = randint(0, len(self._listSolutions) - 1)
             child = self._listSolutions[i1].cross(self._listSolutions[i2])
             child.mutate()
             if child not in new_list_solution:
@@ -128,12 +128,18 @@ class Solution:
 
     def mutate(self):
         cit = self._problem.get_cities()
-        # cit = curentProb.cities
         index = randint(1, len(cit) - 1)
         cit[index], cit[1] = cit[1], cit[index]
 
     def cross(self, otherSolution):
-        return self
+        cut_position = randint(2, self._problem.get_size() - 2)
+
+        self_part_1 = self._problem.get_cities()[0:cut_position]
+        for c in otherSolution.problem().get_cities():
+            if c not in self_part_1:
+                self_part_1.append(c)
+
+        return Solution(Problem(self_part_1))
 
     def problem(self):
         return self._problem
@@ -261,20 +267,9 @@ def do(cities):
 
     print("shortest way=", population.get_best_solution().distance())
 
-    for i in range (1, 20):
-        population.new_generation()
-        print("new gen way=", population.get_best_solution().distance())
-
-    # Natural selection => keep only x best solutions
-    # keep 3/4 best
-
-
-
-    # Cross => childs
-
-
-    # Mutations GOTO: natural selection
-    ## GOTO: while loop with condition like 20 time loop or 20% is good...
+    # for i in range(1, 200):
+    #    population.new_generation()
+    #    print(i, " new gen way=", population.get_best_solution().distance())
 
     # ----------------------
     # Affichage du chemin
@@ -328,4 +323,4 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 if __name__ == '__main__':
     # ga_solve()
-    ga_solve("ressources12/data/pb050.txt", False)
+    ga_solve("ressources12/data/pb100.txt", False)
