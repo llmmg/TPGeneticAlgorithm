@@ -62,7 +62,7 @@ class Population:
         population_size = len(self._listSolutions)
 
         # select elites
-        elite_percent = 20
+        elite_percent = 10
         elite_size = int(population_size * elite_percent / 100)
         new_list_solution.extend(self.select_elitism(elite_size))
 
@@ -108,8 +108,8 @@ class Problem:
     def get_cities(self):
         return self._cities
 
-    def set_cities(self,newCities):
-        self._cities=newCities
+    def set_cities(self, newCities):
+        self._cities = newCities
 
 
 # ----------------------------
@@ -140,7 +140,7 @@ class Solution:
     def cross2(self, otherSol):
         cit = self._problem.get_cities()
         pt = randint(2, self._problem.get_size() - 2)
-        print("index",pt)
+
         # cross with second part
         seq1 = []
         seq2 = []
@@ -161,20 +161,10 @@ class Solution:
         new1.extend(seq2)
         new2.extend(seq1)
 
-        # cit=new1
         self._problem.set_cities(new1)
-        # othCit=new2
         otherSol.problem().set_cities(new2)
 
-                # # entre 0,1 et rand-1,rand
-                # # [1,rand[
-                # seq1 = []
-                # seq2 = []
-                # # cities between cross points (0,rand)
-                # for i in range(1, pt):
-                #     seq1.append(cit[i])
-                #     seq2.append(otherSol.problem().get_cities()[i])
-
+        return self
 
     def cross(self, otherSolution):
         cut_position = randint(2, self._problem.get_size() - 2)
@@ -287,7 +277,6 @@ def do(cities):
     # Generate random lists (rnd orders)
     # solution list
     solList = []
-    solList2 = []
     nbSolutions = 100
 
     # mix iterations
@@ -312,32 +301,10 @@ def do(cities):
 
     print("shortest way=", population.get_best_solution().distance())
 
-    #cross test
-    print("----CROSS TESTS---")
-    print("sol 10=")
-    for cit in solList[9].problem().get_cities():
-        print(cit)
 
-    print("sol 11=")
-    for cit in solList[10].problem().get_cities():
-        print(cit)
-
-    print("---10 CROSS 11---")
-
-    solList[9].cross2(solList[10])
-
-    print("sol 10=")
-    for cit in solList[9].problem().get_cities():
-        print(cit)
-
-    print("sol 11=")
-    for cit in solList[10].problem().get_cities():
-        print(cit)
-
-
-    # for i in range(1, 200):
-    #    population.new_generation()
-    #    print(i, " new gen way=", population.get_best_solution().distance())
+    for i in range(1, 200):
+        population.new_generation()
+        print(i, " new gen way=", population.get_best_solution().distance())
 
     # ----------------------
     # Affichage du chemin
@@ -390,5 +357,4 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 
 if __name__ == '__main__':
-    # ga_solve()
     ga_solve("ressources12/data/pb100.txt", False)
