@@ -1,3 +1,4 @@
+import copy
 import sys
 import pygame
 import math
@@ -54,29 +55,32 @@ class Population:
         self._listSolutions = listSolutions
 
     def new_generation(self):
-        # create a new gen, and put it in _listolutions
-        #1 choisir les elites
-        #2 choisir des sol deja dans la pop
-        #3 faire des enfants pour completer
-        pass
+        new_list_solution = list()
+        population_size = len(self._listSolutions)
 
-    def select_roulette(self):
+        # select elites
+        elite_percent = 10
+        elite_size = int(population_size * elite_percent / 100)
+        new_list_solution.extend(self.select_elitism(elite_size))
+
+        # select cross
+        new_list_solution.extend([self.select_cross(new_list_solution) for i in range(population_size - elite_size)])
+
+        self._listSolutions = new_list_solution
+
+    def select_cross(self, new_list_solution):
         # select random sol from this population
-        pass
+        while True:
+            i1 = randint(0, len(self._listSolutions)-1)
+            i2 = randint(0, len(self._listSolutions)-1)
+            child = self._listSolutions[i1].cross(self._listSolutions[i2])
+            child.mutate()
+            if child not in new_list_solution:
+                return child
 
-    def select_elitism(self):
-        # select top x%
-        pass
-
-    def mutate(self):
-        """ Mutate some chromosome. We know list is sorted,
-            we are going to keep the 10% bests and mutate the others """
-        pass
-
-    def cross(self):
-        """ CrossOver some chromosome the population with a fifty percent chance to happen.
-            The 5% of elits won't be affected. """
-        pass
+    def select_elitism(self, number):
+        sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
+        return copy.deepcopy(sorted_list[0:number])
 
     def get_best_solution(self):
         return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
@@ -125,8 +129,8 @@ class Solution:
     def mutate(self):
         pass
 
-    def cross(self):
-        pass
+    def cross(self, otherSolution):
+        return self
 
     def problem(self):
         return self._problem
@@ -254,6 +258,10 @@ def do(cities):
 
     print("shortest way=", population.get_best_solution().distance())
 
+    for i in range (1, 20):
+        population.new_generation()
+        print("new gen way=", population.get_best_solution().distance())
+
     # Natural selection => keep only x best solutions
     # keep 3/4 best
 
@@ -317,4 +325,4 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 if __name__ == '__main__':
     # ga_solve()
-    ga_solve("ressources12/data/pb005.txt", False)
+    ga_solve("ressources12/data/pb050.txt", False)
