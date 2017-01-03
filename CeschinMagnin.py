@@ -127,7 +127,10 @@ class Solution:
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        pass
+        cit = self._problem.get_cities()
+        # cit = curentProb.cities
+        index = randint(1, len(cit) - 1)
+        cit[index], cit[1] = cit[1], cit[index]
 
     def cross(self, otherSolution):
         return self
