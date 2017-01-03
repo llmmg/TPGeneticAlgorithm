@@ -234,7 +234,6 @@ def do(cities):
         newSolution = Solution(prob)
         if newSolution not in solList:
             solList.append(newSolution)
-            print("appened")
 
     # Display generated solutions
     i = 0
@@ -244,9 +243,9 @@ def do(cities):
         for cit in sol.problem().get_cities():
             print(cit)
 
-    # test
-    # print("distance from", cities[0], " to ", cities[1])
-    # print("dist=", cities[0].point().calculate_distance(cities[1].point()))
+    population = Population(solList)
+
+    print("shortest way=", population.get_best_solution().distance())
 
     # Natural selection => keep only x best solutions
     # keep 3/4 best
