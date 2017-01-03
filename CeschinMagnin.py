@@ -4,6 +4,13 @@ import pygame
 import math
 from random import randint
 
+# GLOBALS FOR GUI
+screen_x = 500
+screen_y = 500
+window = None
+screen = None
+font = None
+
 
 # ----------------------------
 # City
@@ -90,9 +97,9 @@ class Population:
 
 
 # ----------------------------
-# Problem
+# Path
 # ----------------------------
-class Problem:
+class Path:
     def __init__(self, cities):
         self._cities = cities
 
@@ -116,35 +123,35 @@ class Problem:
 # Solution
 # ----------------------------
 class Solution:
-    def __init__(self, problem):
-        self._problem = problem
+    def __init__(self, path):
+        self._path = path
         self._distance = 0
         self.calculate_distance()
 
     def __eq__(self, sol2):
-        return self._problem.get_cities() == sol2.problem().get_cities()
+        return self.path().get_cities() == sol2.path().get_cities()
 
     def calculate_distance(self):
         self._distance = 0
-        cities = self._problem.get_cities()
-        for i in range(0, self._problem.get_size() - 1):
+        cities = self.path().get_cities()
+        for i in range(0, self.path().get_size() - 1):
             self._distance += cities[i].point().calculate_distance(cities[i + 1].point())
         # add distance from last city to start city (to complete the loop)
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        cit = self._problem.get_cities()
+        cit = self.path().get_cities()
         index = randint(2, len(cit) - 1)
         cit[index], cit[1] = cit[1], cit[index]
 
     def cross2(self, otherSol):
-        cit = self._problem.get_cities()
-        pt = randint(2, self._problem.get_size() - 2)
+        cit = self.path().get_cities()
+        pt = randint(2, self.path().get_size() - 2)
 
         # cross with second part
         seq1 = []
         seq2 = []
-        othCit = otherSol.problem().get_cities()
+        othCit = otherSol.path().get_cities()
 
         for i in range(pt, len(cit)):
             seq1.append(cit[i])
@@ -161,72 +168,26 @@ class Solution:
         new1.extend(seq2)
         new2.extend(seq1)
 
-        self._problem.set_cities(new1)
-        otherSol.problem().set_cities(new2)
+        self.path().set_cities(new1)
+        otherSol.path().set_cities(new2)
 
         return self
 
     def cross(self, otherSolution):
-        cut_position = randint(2, self._problem.get_size() - 2)
+        cut_position = randint(2, self.path().get_size() - 2)
 
-        self_part_1 = self._problem.get_cities()[0:cut_position]
-        for c in otherSolution.problem().get_cities():
+        self_part_1 = self.path().get_cities()[0:cut_position]
+        for c in otherSolution.path().get_cities():
             if c not in self_part_1:
                 self_part_1.append(c)
 
-        return Solution(Problem(self_part_1))
+        return Solution(Path(self_part_1))
 
-    def problem(self):
-        return self._problem
+    def path(self):
+        return self._path
 
     def distance(self):
         return self._distance
-
-
-def draw_gui():
-    screen_x = 500
-    screen_y = 500
-
-    city_color = [10, 10, 200]  # blue
-    city_radius = 3
-
-    font_color = [255, 255, 255]  # white
-
-    pygame.init()
-    window = pygame.display.set_mode((screen_x, screen_y))
-    pygame.display.set_caption('Input')
-    screen = pygame.display.get_surface()
-    font = pygame.font.Font(None, 30)
-
-    def draw(positions):
-        screen.fill(0)
-        for city in positions:
-            pygame.draw.circle(screen, city_color, city.get_pos(), city_radius)
-        text = font.render("Nombre: %i" % len(positions), True, font_color)
-        textRect = text.get_rect()
-        screen.blit(text, textRect)
-        pygame.display.flip()
-
-    cities = []
-    draw(cities)
-
-    collecting = True
-
-    while collecting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit(0)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                collecting = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
-                draw(cities)
-
-    screen.fill(0)
-    pygame.quit()
-
-    return cities
 
 
 def load_from_file(file):
@@ -241,120 +202,121 @@ def load_from_file(file):
     return cities
 
 
-def do(cities):
+def ga_solve(file=None, gui=True, maxtime=0):
+    cities = []
+
+    init_gui()
+
+    # load cities from file and/or start collecting trough gui
+    if file is not None:
+        cities = load_from_file(file)
+    if gui is True:
+        # Loop for collecting cities
+        collecting = True
+        while collecting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit(0)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    collecting = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
+                    draw(cities)
+
     # -----------------------
-    # Affichage des villes
+    # Résultats
     # -----------------------
-    screen_x = 500
-    screen_y = 500
-
-    city_color = [10, 10, 200]  # blue
-    city_radius = 3
-
-    font_color = [255, 255, 255]  # white
-
-    pygame.init()
-    window = pygame.display.set_mode((screen_x, screen_y))
-    pygame.display.set_caption('Results')
-    screen = pygame.display.get_surface()
-    font = pygame.font.Font(None, 30)
-
-    def draw(positions):
-        screen.fill(0)
-        for city in cities:
-            pygame.draw.circle(screen, city_color, city.point().coords(), city_radius)
-        text = font.render("Nombre: %i" % len(positions), True, font_color)
-        textRect = text.get_rect()
-        screen.blit(text, textRect)
-        pygame.display.flip()
-
-    draw(cities)
-
-    # ---------------------
-    # Algorithm
-    # ---------------------
-
-    # Generate random lists (rnd orders)
-    # solution list
-    solList = []
-    nbSolutions = 100
-
-    # mix iterations
-    nbPass = 10
-
-    # generate 100 cities
-    for i in range(0, nbSolutions):
-        prob = Problem(generateRnd(cities, nbPass))
-        newSolution = Solution(prob)
-        if newSolution not in solList:
-            solList.append(newSolution)
-
-    # Display generated solutions
-    i = 0
-    for sol in solList:
-        i += 1
-        print("solution ", i)
-        for cit in sol.problem().get_cities():
-            print(cit)
-
-    population = Population(solList)
-
-    print("shortest way=", population.get_best_solution().distance())
-
+    population = generateStartPopulation(cities, 100)
 
     for i in range(1, 200):
+        draw(population.get_best_solution())
+        print(i, " path distance = ", population.get_best_solution().distance())
         population.new_generation()
-        print(i, " new gen way=", population.get_best_solution().distance())
-
-    # ----------------------
-    # Affichage du chemin
-    # ----------------------
-
 
     # ----------------------
     # Boucle pour rester dans l'affichage
     # ----------------------
     collecting = True
-
     while collecting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 collecting = False
-
     screen.fill(0)
     pygame.quit()
 
 
-# return a list of rndm cities (= one solution)
-def generateRnd(cities, nPass):
+# return a starting population
+def generateStartPopulation(cities, populationSize):
     """
     :param cities: list of whole cities
-    :param nPass: number of mix pass. more passes = more random solutions
-    :return: a solution (list of cities in random order)
+    :param populationSize: size of the population
+    :return: a population (many different solutions)
     """
-    sol = cities[:]
+    # solution list
+    solList = []
+    sol = []
+    # mix iterations
+    nbPass = 10
 
-    # todo: 9% of chance to add the closest city next
+    # generate solutions
+    for i in range(0, populationSize):
+        sol = cities[:]
+        for j in range(0, nbPass):
+            index = randint(1, len(cities) - 1)
+            sol[index], sol[1] = sol[1], sol[index]
+        newSolution = Solution(Path(sol))
+        if newSolution not in solList:
+            solList.append(newSolution)
 
-    # mix the sol list
-    for i in range(0, nPass):
-        index = randint(1, len(sol) - 1)
-        sol[index], sol[1] = sol[1], sol[index]
-
-    return sol[:]
+    return Population(solList)
 
 
-def ga_solve(file=None, gui=True, maxtime=0):
-    cities = []
-    if file == None and gui == True:
-        cities = draw_gui()
-    elif file != None:
-        cities = load_from_file(file)
+# ----------------------
+# GUI
+# ----------------------
 
-    do(cities)
+def init_gui():
+    global window
+    global screen
+    global font
+
+    pygame.init()
+    window = pygame.display.set_mode((screen_x, screen_y))
+    pygame.display.set_caption('Travelling Salesman')
+    screen = pygame.display.get_surface()
+    font = pygame.font.Font(None, 30)
+
+
+def draw(item):
+    # item can be a solution or a list of cities
+    if type(item) is Solution:
+        list_cities = item.path().get_cities()
+    else:
+        list_cities = item
+
+    screen.fill(0)
+    pointlist = []
+
+    city_color = [0, 255, 0]
+    city_radius = 5
+
+    for city in list_cities:
+        pos = city.point()
+        # Points array for drawing lines between cities
+        pointlist.append((pos.x(), pos.y()))
+        pygame.draw.circle(screen, city_color, (pos.x(), pos.y()), city_radius)
+
+    # Don't forget to set the first element as the last too (close the loop)
+    if len(pointlist) > 0:
+        pointlist.append((pointlist[0]))
+        # Draw the lines between cities
+        pygame.draw.lines(screen, 0xffffff, False, [p for p in pointlist], 2)
+
+    pygame.display.flip()
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb100.txt", False)
+    ga_solve("ressources12/data/pb010.txt", False)
