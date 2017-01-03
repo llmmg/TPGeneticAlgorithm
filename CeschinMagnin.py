@@ -54,21 +54,28 @@ class Population:
         self._listSolutions = listSolutions
 
     def new_generation(self):
+        # create a new gen, and put it in _listolutions
+        #1 choisir les elites
+        #2 choisir des sol deja dans la pop
+        #3 faire des enfants pour completer
         pass
 
     def select_roulette(self):
+        # select random sol from this population
         pass
 
     def select_elitism(self):
+        # select top x%
         pass
 
     def mutate(self):
+        """ Mutate some chromosome. We know list is sorted,
+            we are going to keep the 10% bests and mutate the others """
         pass
 
     def cross(self):
-        pass
-
-    def elitism_experiment(self):
+        """ CrossOver some chromosome the population with a fifty percent chance to happen.
+            The 5% of elits won't be affected. """
         pass
 
     def get_best_solution(self):
