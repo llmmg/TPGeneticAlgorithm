@@ -45,7 +45,7 @@ class Point:
         return str(self._x) + " ; " + str(self._y)
 
     def calculate_distance(self, point):
-        return math.sqrt((point.x() - self.x()) ** 2 + (point.y() - self.y()) ** 2)
+        return math.sqrt((point.x() - self._x) ** 2 + (point.y() - self._y) ** 2)
 
     def x(self):
         return self._x
@@ -61,8 +61,8 @@ class Point:
 # Population
 # ----------------------------
 class Population:
-    def __init__(self, listSolutions):
-        self._listSolutions = listSolutions
+    def __init__(self, list_solutions):
+        self._listSolutions = list_solutions
 
     def new_generation(self):
         new_list_solution = list()
@@ -109,7 +109,14 @@ class Path:
         self._cities = cities
 
     def __eq__(self, prob):
-        return self._cities == prob.get_cities()
+        return self._cities == prob.cities()
+
+    def __str__(self):
+        string = ""
+        for city in self._cities:
+            string += str(city)
+            string += "\t"
+        return string
 
     def add_city(self, city):
         self._cities.append(city)
@@ -117,7 +124,7 @@ class Path:
     def get_size(self):
         return len(self._cities)
 
-    def get_cities(self):
+    def cities(self):
         return self._cities[:]
 
     def set_cities(self, newCities):
@@ -134,29 +141,29 @@ class Solution:
         self.calculate_distance()
 
     def __eq__(self, sol2):
-        return self.path().get_cities() == sol2.path().get_cities()
+        return self.path().cities() == sol2.path().cities()
 
     def calculate_distance(self):
         self._distance = 0
-        cities = self.path().get_cities()
+        cities = self.path().cities()
         for i in range(0, self.path().get_size() - 1):
             self._distance += cities[i].point().calculate_distance(cities[i + 1].point())
-        # add distance from last city to start city (to complete the loop)
+        # complete the loop
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        cit = self.path().get_cities()
+        cit = self.path().cities()
         index = randint(2, len(cit) - 1)
         cit[index], cit[1] = cit[1], cit[index]
 
     def cross2(self, otherSol):
-        cit = self.path().get_cities()
+        cit = self.path().cities()
         pt = randint(2, self.path().get_size() - 2)
 
         # cross with second part
         seq1 = []
         seq2 = []
-        othCit = otherSol.path().get_cities()
+        othCit = otherSol.path().cities()
 
         for i in range(pt, len(cit)):
             seq1.append(cit[i])
@@ -181,8 +188,8 @@ class Solution:
     def cross(self, otherSolution):
         cut_position = randint(2, self.path().get_size() - 2)
 
-        self_part_1 = self.path().get_cities()[0:cut_position]
-        for c in otherSolution.path().get_cities():
+        self_part_1 = self.path().cities()[0:cut_position]
+        for c in otherSolution.path().cities():
             if c not in self_part_1:
                 self_part_1.append(c)
 
@@ -232,11 +239,13 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # -----------------------
     # Résultats
     # -----------------------
-    population = generateStartPopulation(cities, 100)
+    population = generate_start_population(cities, 100)
 
-    for i in range(1, 200):
+    for i in range(1, 2000):
         draw(population.get_best_solution())
-        print(i, " path distance = ", population.get_best_solution().distance())
+        print(i)
+        print("distance = ", population.get_best_solution().distance())
+        # print(str(population.get_best_solution().path()))
         population.new_generation()
 
     # ----------------------
@@ -254,7 +263,7 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
 
 # return a starting population
-def generateStartPopulation(cities, populationSize):
+def generate_start_population(cities, populationSize):
     """
     :param cities: list of whole cities
     :param populationSize: size of the population
@@ -264,7 +273,7 @@ def generateStartPopulation(cities, populationSize):
     solList = []
     sol = []
     # mix iterations
-    nbPass = 10
+    nbPass = len(cities)
 
     # generate solutions
     for i in range(0, populationSize):
@@ -272,9 +281,9 @@ def generateStartPopulation(cities, populationSize):
         for j in range(0, nbPass):
             index = randint(1, len(cities) - 1)
             sol[index], sol[1] = sol[1], sol[index]
-        newSolution = Solution(Path(sol))
-        if newSolution not in solList:
-            solList.append(newSolution)
+        new_solution = Solution(Path(sol))
+        if new_solution not in solList:
+            solList.append(new_solution)
 
     print(len(solList))
     return Population(solList)
@@ -299,7 +308,7 @@ def init_gui():
 def draw(item):
     # item can be a solution or a list of cities
     if type(item) is Solution:
-        list_cities = item.path().get_cities()
+        list_cities = item.path().cities()
     else:
         list_cities = item
 
@@ -315,11 +324,18 @@ def draw(item):
         pointlist.append((pos.x(), pos.y()))
         pygame.draw.circle(screen, city_color, (pos.x(), pos.y()), city_radius)
 
-    # Don't forget to set the first element as the last too (close the loop)
-    if len(pointlist) > 0:
-        pointlist.append((pointlist[0]))
-        # Draw the lines between cities
-        pygame.draw.lines(screen, 0xffffff, False, [p for p in pointlist], 2)
+        # Create the label with the name of the city
+        label = font.render(city.name(), 1, city_color, None)
+        # Draw the label
+        screen.blit(label, (pos.x() + 10, pos.y() - 6))
+
+    # draw lines
+
+    oldpoint = pointlist[-1]
+    for point in pointlist:
+        # Draw the line between cities
+        pygame.draw.line(screen, 0xffffff, oldpoint, point, 2)
+        oldpoint = point
 
     pygame.display.flip()
 
