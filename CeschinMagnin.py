@@ -86,7 +86,7 @@ class Population:
             child = self._listSolutions[i1].cross(self._listSolutions[i2])
 
             # test - mutate randomly
-            iMut = randint(0, 3)
+            iMut = randint(0, 9)
             if iMut == 0:
                 child.mutate()
 
