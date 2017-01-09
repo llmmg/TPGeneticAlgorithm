@@ -69,7 +69,7 @@ class Population:
         population_size = len(self._listSolutions)
 
         # select elites
-        elite_percent = 10
+        elite_percent = 30
         elite_size = int(population_size * elite_percent / 100)
         new_list_solution.extend(self.select_elitism(elite_size))
 
@@ -84,13 +84,18 @@ class Population:
             i1 = randint(0, len(self._listSolutions) - 1)
             i2 = randint(0, len(self._listSolutions) - 1)
             child = self._listSolutions[i1].cross(self._listSolutions[i2])
-            child.mutate()
+
+            # test - mutate randomly
+            iMut = randint(0, 3)
+            if iMut == 0:
+                child.mutate()
+
             if child not in new_list_solution:
                 return child
 
     def select_elitism(self, number):
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
-        return copy.deepcopy(sorted_list[0:number])
+        return (sorted_list[0:number])[:]
 
     def get_best_solution(self):
         return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
@@ -113,7 +118,7 @@ class Path:
         return len(self._cities)
 
     def get_cities(self):
-        return self._cities
+        return self._cities[:]
 
     def set_cities(self, newCities):
         self._cities = newCities
@@ -171,7 +176,7 @@ class Solution:
         self.path().set_cities(new1)
         otherSol.path().set_cities(new2)
 
-        return self
+        return otherSol
 
     def cross(self, otherSolution):
         cut_position = randint(2, self.path().get_size() - 2)
@@ -271,6 +276,7 @@ def generateStartPopulation(cities, populationSize):
         if newSolution not in solList:
             solList.append(newSolution)
 
+    print(len(solList))
     return Population(solList)
 
 
@@ -319,4 +325,5 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb010.txt", False)
+    ga_solve("ressources12/data/pb050.txt", False)
+    # best for 50 = 2515
