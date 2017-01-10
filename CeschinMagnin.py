@@ -2,6 +2,7 @@ import copy
 import sys
 import pygame
 import math
+import random
 from random import randint
 
 # GLOBALS FOR GUI
@@ -69,9 +70,10 @@ class Population:
         population_size = len(self._listSolutions)
 
         # select elites
-        elite_percent = 30
+        elite_percent = 10
         elite_size = int(population_size * elite_percent / 100)
         new_list_solution.extend(self.select_elitism(elite_size))
+        # new_list_solution.extend(self.select_random(elite_size))
 
         # select cross
         new_list_solution.extend([self.select_cross(new_list_solution) for i in range(population_size - elite_size)])
@@ -96,6 +98,23 @@ class Population:
     def select_elitism(self, number):
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
         return (sorted_list[0:number])[:]
+
+    # TODO: other select function
+    def select_random(self, number):
+
+        sorted_list=sorted(self._listSolutions, key=lambda sol: sol.distance())
+        sortLst=sorted_list[0:int(number/2)]
+
+        i=(number/2)+1
+
+        while (i < number):
+            tmp = random.choice(self._listSolutions)
+            if tmp not in sortLst:
+                sortLst.append(tmp)
+                i += 1
+
+        return sortLst
+
 
     def get_best_solution(self):
         return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
@@ -152,9 +171,10 @@ class Solution:
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        cit = self.path().cities()
+        cit = self.path()._cities
         index = randint(2, len(cit) - 1)
-        cit[index], cit[1] = cit[1], cit[index]
+        index2 = randint(1, len(cit) - 2)
+        cit[index], cit[index2] = cit[index2], cit[index]
 
     def cross2(self, otherSol):
         cit = self.path().cities()
@@ -239,14 +259,17 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # -----------------------
     # Résultats
     # -----------------------
-    population = generate_start_population(cities, 100)
+    population = generate_start_population(cities, 200)
 
-    for i in range(1, 2000):
+    for i in range(1, 100):
         draw(population.get_best_solution())
         print(i)
         print("distance = ", population.get_best_solution().distance())
         # print(str(population.get_best_solution().path()))
         population.new_generation()
+
+    for cit in population.get_best_solution().path().cities():
+        print(cit)
 
     # ----------------------
     # Boucle pour rester dans l'affichage
