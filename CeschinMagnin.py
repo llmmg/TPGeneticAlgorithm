@@ -3,6 +3,7 @@ import sys
 import pygame
 import math
 import random
+import time
 from random import randint
 
 # GLOBALS FOR GUI
@@ -207,7 +208,8 @@ class Solution:
         return otherSol
 
     def cross(self, otherSolution):
-        cut_position = randint(1, self.path().get_size() - 2)
+
+        cut_position = randint(1, self.path().get_size())
 
         self_part_1 = self.path().cities()[0:cut_position]
         for c in otherSolution.path().cities():
@@ -331,9 +333,7 @@ def closestCit(city, listCit):
 
 def ga_solve(file=None, gui=True, maxtime=0):
     cities = []
-
     init_gui()
-
     # load cities from file and/or start collecting trough gui
     if file is not None:
         cities = load_from_file(file)
@@ -351,20 +351,29 @@ def ga_solve(file=None, gui=True, maxtime=0):
                     cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
                     draw(cities)
 
-    # -----------------------
-    # Résultats
-    # -----------------------
-    population = generate_start_population(cities, 20)
 
-    for i in range(1, 200):
-        print(i)
-        print("distance = ", population.get_best_solution().distance())
-        # print(str(population.get_best_solution().path()))
-        population.new_generation()
+    # -----------------------
+    # Main Loop
+    # -----------------------
 
+    population = generate_start_population(cities, 5)
+    best_solution = population.get_best_solution()
+    same_solution_counter = 0
+    start_time = time.time()
     draw(population.get_best_solution())
 
-    for cit in population.get_best_solution().path().cities():
+    while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
+        population.new_generation()
+        if population.get_best_solution() == best_solution:
+            same_solution_counter += 1
+        else:
+            same_solution_counter = 0
+            best_solution = population.get_best_solution()
+            # draw(best_solution)
+
+    draw(best_solution)
+    print("DONE")
+    for cit in best_solution.path().cities():
         print(cit)
 
     # ----------------------
@@ -407,7 +416,6 @@ def generate_start_population(cities, populationSize):
         if new_solution not in solList:
             solList.append(new_solution)
 
-    print(len(solList))
     return Population(solList)
 
 
