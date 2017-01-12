@@ -70,7 +70,7 @@ class Population:
         population_size = len(self._listSolutions)
 
         # select elites
-        elite_percent = 10
+        elite_percent = 30
         elite_size = int(population_size * elite_percent / 100)
         new_list_solution.extend(self.select_elitism(elite_size))
         # new_list_solution.extend(self.select_random(elite_size))
@@ -83,8 +83,10 @@ class Population:
     def select_cross(self, new_list_solution):
         # select random sol from this population
         while True:
-            i1 = randint(0, len(self._listSolutions) - 1)
+            #TODO: something else than random?
+            i1 = randint(0, len(self._listSolutions) - int(len(self._listSolutions)/2))
             i2 = randint(0, len(self._listSolutions) - 1)
+            # i2 = randint(int(len(self._listSolutions)/2), len(self._listSolutions) - 1)
             child = self._listSolutions[i1].cross(self._listSolutions[i2])
 
             # test - mutate randomly
@@ -99,13 +101,12 @@ class Population:
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
         return (sorted_list[0:number])[:]
 
-    # TODO: other select function
     def select_random(self, number):
 
-        sorted_list=sorted(self._listSolutions, key=lambda sol: sol.distance())
-        sortLst=sorted_list[0:int(number/2)]
+        sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
+        sortLst = sorted_list[0:int(number / 2)]
 
-        i=(number/2)+1
+        i = (number / 2) + 1
 
         while (i < number):
             tmp = random.choice(self._listSolutions)
@@ -114,7 +115,6 @@ class Population:
                 i += 1
 
         return sortLst
-
 
     def get_best_solution(self):
         return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
@@ -176,6 +176,7 @@ class Solution:
         index2 = randint(1, len(cit) - 2)
         cit[index], cit[index2] = cit[index2], cit[index]
 
+
     def cross2(self, otherSol):
         cit = self.path().cities()
         pt = randint(2, self.path().get_size() - 2)
@@ -206,7 +207,7 @@ class Solution:
         return otherSol
 
     def cross(self, otherSolution):
-        cut_position = randint(2, self.path().get_size() - 2)
+        cut_position = randint(1, self.path().get_size() - 2)
 
         self_part_1 = self.path().cities()[0:cut_position]
         for c in otherSolution.path().cities():
@@ -214,6 +215,79 @@ class Solution:
                 self_part_1.append(c)
 
         return Solution(Path(self_part_1))
+
+    def crossing(population, size):
+        """ Principe global de mutation : Mutation XO.
+            On selectionne deux Chromosomes x et y parmis la population.
+            On détermine une section où on va insérer la section de y dans le même endroit de x.
+            Il faut pour ceci préparer x à recevoir les gènes de y en :
+                Déterminant les valeurs de la portion de y qui sera insérée.
+                Remplacer ces valeurs dans x par un marqueur.
+                Mettre en place ces marqueurs à la position de la section que l'on échange.
+                Pour ceci, on condense tous les indexes sans les marqueurs, que l'on décale
+                par n rotations à droite, où n est le nombre de marqueurs entre la fin de la section
+                et la fin des gênes.
+                A la fin, on insère la section de y.
+                exemple complet :
+                Chromosomes retenus
+                [8, 7, 2, 3, 0, 5, 1, 6, 4, 9]] : Cost : 2433.6255091876656
+                [4, 9, 0, 3, 5, 6, 2, 7, 1, 8]] : Cost : 2468.848455299176
+                Section (valeurs) à échanger (choisie arbitrairement, indexs 3 à 5)
+                [3, 5, 6]
+                X sans les valeurs de la section
+                [8, 7, 2, None, 0, None, 1, None, 4, 9]
+                Nombre de None après l'index 5
+                1
+                Liste sans les None, avant décalage
+                [8, 7, 2, 0, 1, 4, 9]
+                Liste sans les None, après décalage
+                [7, 2, 0, 1, 4, 9, 8]
+                Portion à insérer
+                [3, 5, 6]
+                Nouveaux gênes après croisements
+                [7, 2, 0, 3, 5, 6, 1, 4, 9, 8]
+        """
+        start_xo_index = int(len(population[0].genes) / 2 - len(population[0].genes) / 4)
+        end_xo_index = int(len(population[0].genes) / 2 + len(population[0].genes) / 4)
+
+        nb_to_create = size - len(population)
+
+        for chromosome_index in range(0, nb_to_create):
+            # Choix des chromosomes, pour le moment consécutifs
+            # TODO : Changer le choix des échantillons dans la population
+            if chromosome_index < len(population):
+                chromosome_x = population[chromosome_index - len(population)]
+                chromosome_y = population[chromosome_index - len(population) + 1]
+            else:
+                chromosome_x = population[chromosome_index - len(population)]
+                chromosome_y = population[0]
+
+            # Détermination des valeurs à supprimer dans x, tirées de la portion y
+            list_to_replace = chromosome_y.genes[start_xo_index:end_xo_index + 1]
+
+            # Remplacement de ces valeurs dans x avec des None
+            new_genes_list = [value if value not in list_to_replace else None for value in chromosome_x.genes]
+
+            # Comptage du nombre de None à droite de la section (pour le décalage)
+            nb_none_right = new_genes_list[end_xo_index + 1:].count(None)
+
+            # Suppression des None dans la liste pour les rotations
+            new_genes_list = [value for value in new_genes_list if not value == None]
+
+            # Rotation à droite des éléments
+            for counter in range(0, nb_none_right):
+                new_genes_list.insert(len(new_genes_list), new_genes_list.pop(0))
+            list_to_insert = chromosome_y.genes[start_xo_index:end_xo_index + 1]
+
+            # Insertion des valeurs de y dans la section préparée
+            new_genes_list[start_xo_index:start_xo_index] = list_to_insert
+
+            # Ajout du nouveau chromosome à la population
+            population.append(Chromosome(new_genes_list))
+
+        return population
+
+
 
     def path(self):
         return self._path
@@ -231,7 +305,28 @@ def load_from_file(file):
             c = City(name, Point(int(pos_x), int(pos_y)))
             cities.append(c)
 
-    return cities
+    # add cities by cities with shortest distance
+    shrtCit = []
+    shrtCit.append(cities.pop())
+    while(len(cities)>0):
+        nextCit=closestCit(shrtCit[-1], cities)
+        cities.remove(nextCit)
+        shrtCit.append(nextCit)
+
+    return shrtCit
+
+
+def closestCit(city, listCit):
+    tmpdist = city.point().calculate_distance(listCit[0].point())
+    closestCity = listCit[0]
+
+    for cit in listCit:
+        curDist = city.point().calculate_distance(cit.point())
+        if curDist < tmpdist:
+            closestCity = cit
+            tmpdist = curDist
+
+    return closestCity
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
@@ -259,14 +354,15 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # -----------------------
     # Résultats
     # -----------------------
-    population = generate_start_population(cities, 200)
+    population = generate_start_population(cities, 20)
 
-    for i in range(1, 100):
-        draw(population.get_best_solution())
+    for i in range(1, 200):
         print(i)
         print("distance = ", population.get_best_solution().distance())
         # print(str(population.get_best_solution().path()))
         population.new_generation()
+
+    draw(population.get_best_solution())
 
     for cit in population.get_best_solution().path().cities():
         print(cit)
@@ -297,6 +393,9 @@ def generate_start_population(cities, populationSize):
     sol = []
     # mix iterations
     nbPass = len(cities)
+
+    # cities is by default "sorted" (see file loading) so add it to solution before mixing
+    # solList.append(Solution(Path(cities)))
 
     # generate solutions
     for i in range(0, populationSize):
