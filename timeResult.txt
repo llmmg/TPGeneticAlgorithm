@@ -1,0 +1,346 @@
+10890.025547781446
+10262.592699887557
+9812.352166181807
+9251.506339171452
+9204.60949833548
+9024.090574221329
+8990.248088560526
+8939.004804205602
+8856.705364615673
+8781.046230998505
+8774.81576208629
+8644.245633454264
+8562.627310750931
+8506.169075214308
+8459.337401898574
+8445.215778495985
+8438.831857725469
+8413.788642731392
+8328.466092880648
+8278.526085348016
+8168.813951365697
+8157.258281776372
+8126.652148962371
+8090.98537361974
+8085.171212732861
+8049.50443739023
+8014.844264767257
+8003.378565360531
+7961.897629131021
+7952.064952906915
+7936.977101735351
+7936.97560579137
+7905.775054024181
+7889.948272706487
+7865.026249366836
+7864.165127156572
+7852.168522935726
+7818.8112865230905
+7779.8964939066045
+7769.642826655649
+7758.056801730685
+7751.648153822019
+7668.399953018156
+7655.8913723064425
+7573.879970473316
+7564.121945291602
+7528.733559361223
+7502.298458663263
+7451.182779148543
+7433.2836066347645
+7430.741399110201
+7429.677287922143
+7418.116773016598
+7400.21760050282
+7396.192836436638
+7333.284753482691
+7329.678434770069
+7325.322684337481
+7314.631367199987
+7224.354609174439
+7178.301513249285
+7106.050925317973
+7043.639326791471
+7025.718473053704
+6963.306874527201
+6860.433178320912
+6783.301908005908
+6508.785505334737
+6441.405648780413
+6392.246432528879
+6389.9754327894425
+5888.796756237262
+5846.429821616867
+5773.490187991521
+5765.811599885683
+5753.079998707229
+5675.758948867591
+5639.623257488476
+5605.9667122383125
+5498.298200667288
+5477.299634662566
+5465.150533999889
+5338.45331301992
+5236.41769732293
+5234.725540118208
+5232.551974173441
+DONE
+v49 at position 76 ; 315
+v9 at position 37 ; 350
+v2 at position 4 ; 493
+v29 at position 7 ; 483
+v0 at position 23 ; 439
+v4 at position 56 ; 309
+v28 at position 144 ; 400
+v36 at position 134 ; 438
+v31 at position 158 ; 342
+v3 at position 178 ; 390
+v45 at position 170 ; 327
+v11 at position 164 ; 227
+v12 at position 288 ; 294
+v14 at position 407 ; 200
+v19 at position 388 ; 203
+v20 at position 191 ; 221
+v25 at position 55 ; 138
+v30 at position 10 ; 169
+v22 at position 42 ; 143
+v44 at position 56 ; 8
+v42 at position 107 ; 35
+v6 at position 60 ; 120
+v46 at position 164 ; 104
+v16 at position 233 ; 182
+v43 at position 284 ; 435
+v7 at position 272 ; 454
+v48 at position 272 ; 464
+v32 at position 92 ; 471
+v15 at position 111 ; 379
+v33 at position 340 ; 301
+v24 at position 429 ; 442
+v27 at position 436 ; 441
+v8 at position 471 ; 84
+v37 at position 486 ; 155
+v39 at position 424 ; 189
+v47 at position 409 ; 181
+v23 at position 386 ; 388
+v21 at position 375 ; 428
+v1 at position 389 ; 180
+v34 at position 450 ; 490
+v41 at position 456 ; 471
+v5 at position 469 ; 414
+v10 at position 419 ; 223
+v38 at position 272 ; 167
+v35 at position 366 ; 143
+v13 at position 406 ; 83
+v40 at position 492 ; 24
+v18 at position 401 ; 447
+v26 at position 302 ; 226
+v17 at position 137 ; 246
+5232.551974173441
+Wrote profile results to CeschinMagnin.py.lprof
+Timer unit: 2.92739e-07 s
+
+Total time: 24.6746 s
+File: CeschinMagnin.py
+Function: ga_solve at line 333
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   333                                           @profile
+   334                                           def ga_solve(file=None, gui=True, maxtime=0):
+   335         1            6      6.0      0.0      cities = []
+   336         1      2027645 2027645.0      2.4      init_gui()
+   337                                               # load cities from file and/or start collecting trough gui
+   338         1           12     12.0      0.0      if file is not None:
+   339         1        29501  29501.0      0.0          cities = load_from_file(file)
+   340         1            7      7.0      0.0      if gui is True:
+   341                                                   # Loop for collecting cities
+   342                                                   collecting = True
+   343                                                   while collecting:
+   344                                                       for event in pygame.event.get():
+   345                                                           if event.type == pygame.QUIT:
+   346                                                               sys.exit(0)
+   347                                                           elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+   348                                                               collecting = False
+   349                                                           elif event.type == pygame.MOUSEBUTTONDOWN:
+   350                                                               pos = pygame.mouse.get_pos()
+   351                                                               cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
+   352                                                               draw(cities)
+   353                                           
+   354                                           
+   355                                               # -----------------------
+   356                                               # Main Loop
+   357                                               # -----------------------
+   358                                           
+   359         1        30958  30958.0      0.0      population = generate_start_population(cities, 20)
+   360         1           74     74.0      0.0      best_solution = population.get_best_solution()
+   361         1            3      3.0      0.0      same_solution_counter = 0
+   362         1            7      7.0      0.0      start_time = time.time()
+   363         1         5159   5159.0      0.0      draw(population.get_best_solution())
+   364                                           
+   365       652         2076      3.2      0.0      while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
+   366       651     42444339  65198.7     50.4          population.new_generation()
+   367       651        55611     85.4      0.1          if population.get_best_solution() == best_solution:
+   368       565         1826      3.2      0.0              same_solution_counter += 1
+   369                                                   else:
+   370        86          235      2.7      0.0              same_solution_counter = 0
+   371        86         4293     49.9      0.0              best_solution = population.get_best_solution()
+   372        86       314475   3656.7      0.4              draw(best_solution)
+   373        86         7741     90.0      0.0              print(best_solution.distance())
+   374                                           
+   375         1         3493   3493.0      0.0      draw(best_solution)
+   376         1           70     70.0      0.0      print("DONE")
+   377        51          129      2.5      0.0      for cit in best_solution.path().cities():
+   378        50          897     17.9      0.0          print(cit)
+   379                                           
+   380         1           27     27.0      0.0      print(best_solution.distance())
+   381                                           
+   382                                               # ----------------------
+   383                                               # Boucle pour rester dans l'affichage
+   384                                               # ----------------------
+   385         1            2      2.0      0.0      collecting = True
+   386   3755386      8834887      2.4     10.5      while collecting:
+   387   3757197     30510671      8.1     36.2          for event in pygame.event.get():
+   388      1812         9173      5.1      0.0              if event.type == pygame.QUIT:
+   389         1           56     56.0      0.0                  sys.exit(0)
+   390      1811         5504      3.0      0.0              elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+   391                                                           collecting = False
+   392                                               screen.fill(0)
+   393                                               pygame.quit()
+
+10905.58994640512
+10705.65177091148
+10381.321770753746
+10264.007840382219
+10115.435910959843
+10085.985650992288
+9538.347773780732
+9469.62198499785
+9343.048413754359
+9033.867703364716
+8750.768445405694
+8747.466506588475
+8732.685514372433
+8687.1836769275
+8604.877866411487
+8572.598668711302
+8079.711283250264
+8066.37475579002
+8057.884521083428
+7938.751465525224
+7937.045100043281
+7922.5126542703465
+7867.839472646082
+7860.987124324114
+7804.761883472419
+7768.452221864159
+7752.934049690387
+7748.083100748023
+7648.203054061427
+7641.663175510046
+7640.636946643467
+7627.261115580803
+7626.234886714225
+7598.3614859599975
+7511.724050679676
+7486.591019957224
+7431.2884228343455
+7244.730722206892
+7205.405642207206
+6747.647571078058
+6708.870925121231
+6506.784401954724
+6502.104543923442
+6408.649429610451
+6404.903192535173
+6338.52544445345
+6310.488143702005
+6302.062048595445
+6288.273054458541
+6206.102467898989
+6175.744862889214
+6121.149552529371
+6061.502015240286
+6058.613511067145
+6045.697403419408
+5935.86963811275
+5831.980344071286
+5720.177914969362
+5674.231324913176
+5662.5273683819405
+DONE
+v49 at position 76 ; 315
+v38 at position 272 ; 167
+v10 at position 419 ; 223
+v20 at position 191 ; 221
+v46 at position 164 ; 104
+v42 at position 107 ; 35
+v16 at position 233 ; 182
+v40 at position 492 ; 24
+v35 at position 366 ; 143
+v1 at position 389 ; 180
+v26 at position 302 ; 226
+v33 at position 340 ; 301
+v12 at position 288 ; 294
+v45 at position 170 ; 327
+v11 at position 164 ; 227
+v17 at position 137 ; 246
+v31 at position 158 ; 342
+v43 at position 284 ; 435
+v48 at position 272 ; 464
+v7 at position 272 ; 454
+v19 at position 388 ; 203
+v23 at position 386 ; 388
+v5 at position 469 ; 414
+v24 at position 429 ; 442
+v18 at position 401 ; 447
+v21 at position 375 ; 428
+v3 at position 178 ; 390
+v28 at position 144 ; 400
+v15 at position 111 ; 379
+v36 at position 134 ; 438
+v32 at position 92 ; 471
+v29 at position 7 ; 483
+v2 at position 4 ; 493
+v0 at position 23 ; 439
+v9 at position 37 ; 350
+v4 at position 56 ; 309
+v30 at position 10 ; 169
+v6 at position 60 ; 120
+v25 at position 55 ; 138
+v27 at position 436 ; 441
+v34 at position 450 ; 490
+v41 at position 456 ; 471
+v14 at position 407 ; 200
+v47 at position 409 ; 181
+v39 at position 424 ; 189
+v37 at position 486 ; 155
+v8 at position 471 ; 84
+v13 at position 406 ; 83
+v44 at position 56 ; 8
+v22 at position 42 ; 143
+5662.5273683819405
+Wrote profile results to CeschinMagnin.py.lprof
+Timer unit: 2.92739e-07 s
+
+Total time: 13.0003 s
+File: CeschinMagnin.py
+Function: new_generation at line 69
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    69                                               @profile
+    70                                               def new_generation(self):
+    71       676         3069      4.5      0.0          new_list_solution = list()
+    72       676         1879      2.8      0.0          population_size = len(self._listSolutions)
+    73                                           
+    74                                                   # select elites
+    75       676         1300      1.9      0.0          elite_percent = 30
+    76       676         3058      4.5      0.0          elite_size = int(population_size * elite_percent / 100)
+    77       676        42582     63.0      0.1          new_list_solution.extend(self.select_elitism(elite_size))
+    78                                                   # new_list_solution.extend(self.select_random(elite_size))
+    79                                           
+    80                                                   # select cross
+    81       676     44341339  65593.7     99.8          new_list_solution.extend([self.select_cross(new_list_solution) for i in range(population_size - elite_size)])
+    82                                           
+    83       676        16157     23.9      0.0          self._listSolutions = new_list_solution
+

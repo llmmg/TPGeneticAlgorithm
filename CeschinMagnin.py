@@ -67,55 +67,52 @@ class Population:
         self._listSolutions = list_solutions
 
     def new_generation(self):
-        new_list_solution = list()
-        population_size = len(self._listSolutions)
+        pop_size = len(self._listSolutions)
+        self.crossover(int(len(self._listSolutions) / 2))
+        self.mutate()
+        self.reduce_population(pop_size)
 
-        # select elites
-        elite_percent = 30
-        elite_size = int(population_size * elite_percent / 100)
-        new_list_solution.extend(self.select_elitism(elite_size))
-        # new_list_solution.extend(self.select_random(elite_size))
+    def crossover(self, number_of_children):
+        fitness_sum = 0
+        for solution in self._listSolutions:
+            fitness_sum += solution.distance()
 
-        # select cross
-        new_list_solution.extend([self.select_cross(new_list_solution) for i in range(population_size - elite_size)])
+        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
+        for i in range(0, number_of_children):
+            temp_sum = 0
+            p0 = randint(0, int(fitness_sum))
+            p1 = randint(0, int(fitness_sum))
+            parent0 = None
+            parent1 = None
+            for solution in self._listSolutions:
+                temp_sum += solution.distance()
+                if temp_sum > p0 and parent0 is None:
+                    parent0 = solution
+                if temp_sum > p1 and parent1 is None:
+                    parent1 = solution
+                if parent0 is not None and parent1 is not None:
+                    break
 
-        self._listSolutions = new_list_solution
+            child = parent0.cross2(parent1)
+            if child in self._listSolutions:
+                i -= 1
+            else:
+                self._listSolutions.append(child)
+        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
-    def select_cross(self, new_list_solution):
-        # select random sol from this population
-        while True:
-            #TODO: something else than random?
-            i1 = randint(0, len(self._listSolutions) - int(len(self._listSolutions)/2))
-            i2 = randint(0, len(self._listSolutions) - 1)
-            # i2 = randint(int(len(self._listSolutions)/2), len(self._listSolutions) - 1)
-            child = self._listSolutions[i1].cross(self._listSolutions[i2])
+    def mutate(self):
+        probability = 10
+        eliteNumber = 5
+        for solution in self._listSolutions[eliteNumber:]:
+            if randint(0, 100) <= probability:
+                solution.mutate()
 
-            # test - mutate randomly
-            iMut = randint(0, 9)
-            if iMut == 0:
-                child.mutate()
-
-            if child not in new_list_solution:
-                return child
+    def reduce_population(self, pop_size):
+        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:pop_size]
 
     def select_elitism(self, number):
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
         return (sorted_list[0:number])[:]
-
-    def select_random(self, number):
-
-        sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
-        sortLst = sorted_list[0:int(number / 2)]
-
-        i = (number / 2) + 1
-
-        while (i < number):
-            tmp = random.choice(self._listSolutions)
-            if tmp not in sortLst:
-                sortLst.append(tmp)
-                i += 1
-
-        return sortLst
 
     def get_best_solution(self):
         return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
@@ -172,40 +169,9 @@ class Solution:
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        cit = self.path()._cities
-        index = randint(2, len(cit) - 1)
-        index2 = randint(1, len(cit) - 2)
-        cit[index], cit[index2] = cit[index2], cit[index]
-
-
-    def cross2(self, otherSol):
-        cit = self.path().cities()
-        pt = randint(2, self.path().get_size() - 2)
-
-        # cross with second part
-        seq1 = []
-        seq2 = []
-        othCit = otherSol.path().cities()
-
-        for i in range(pt, len(cit)):
-            seq1.append(cit[i])
-            seq2.append(othCit[i])
-
-        new1 = []
-        new2 = []
-        for i in range(0, len(cit)):
-            if cit[i] not in seq2:
-                new1.append(cit[i])
-            if othCit[i] not in seq1:
-                new2.append(othCit[i])
-
-        new1.extend(seq2)
-        new2.extend(seq1)
-
-        self.path().set_cities(new1)
-        otherSol.path().set_cities(new2)
-
-        return otherSol
+        index = randint(2, len(self.path().cities()) - 1)
+        index2 = randint(1, len(self.path().cities()) - 2)
+        self.path().cities()[index], self.path().cities()[index2] = self.path().cities()[index2], self.path().cities()[index]
 
     def cross(self, otherSolution):
 
@@ -218,78 +184,36 @@ class Solution:
 
         return Solution(Path(self_part_1))
 
-    def crossing(population, size):
+    def cross2(self, otherSolution):
         """ Principe global de mutation : Mutation XO.
-            On selectionne deux Chromosomes x et y parmis la population.
-            On détermine une section où on va insérer la section de y dans le même endroit de x.
-            Il faut pour ceci préparer x à recevoir les gènes de y en :
-                Déterminant les valeurs de la portion de y qui sera insérée.
-                Remplacer ces valeurs dans x par un marqueur.
-                Mettre en place ces marqueurs à la position de la section que l'on échange.
-                Pour ceci, on condense tous les indexes sans les marqueurs, que l'on décale
-                par n rotations à droite, où n est le nombre de marqueurs entre la fin de la section
-                et la fin des gênes.
-                A la fin, on insère la section de y.
-                exemple complet :
-                Chromosomes retenus
-                [8, 7, 2, 3, 0, 5, 1, 6, 4, 9]] : Cost : 2433.6255091876656
-                [4, 9, 0, 3, 5, 6, 2, 7, 1, 8]] : Cost : 2468.848455299176
-                Section (valeurs) à échanger (choisie arbitrairement, indexs 3 à 5)
-                [3, 5, 6]
-                X sans les valeurs de la section
-                [8, 7, 2, None, 0, None, 1, None, 4, 9]
-                Nombre de None après l'index 5
-                1
-                Liste sans les None, avant décalage
-                [8, 7, 2, 0, 1, 4, 9]
-                Liste sans les None, après décalage
-                [7, 2, 0, 1, 4, 9, 8]
-                Portion à insérer
-                [3, 5, 6]
-                Nouveaux gênes après croisements
-                [7, 2, 0, 3, 5, 6, 1, 4, 9, 8]
+            Based on Axel Roy implementation
         """
-        start_xo_index = int(len(population[0].genes) / 2 - len(population[0].genes) / 4)
-        end_xo_index = int(len(population[0].genes) / 2 + len(population[0].genes) / 4)
+        start_xo_index = int(len(self._path.cities()) / 2 - len(self._path.cities()) / 4)
+        end_xo_index = int(len(self._path.cities()) / 2 + len(self._path.cities()) / 4)
 
-        nb_to_create = size - len(population)
+        # Détermination des valeurs à supprimer dans x, tirées de la portion y
+        list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
 
-        for chromosome_index in range(0, nb_to_create):
-            # Choix des chromosomes, pour le moment consécutifs
-            # TODO : Changer le choix des échantillons dans la population
-            if chromosome_index < len(population):
-                chromosome_x = population[chromosome_index - len(population)]
-                chromosome_y = population[chromosome_index - len(population) + 1]
-            else:
-                chromosome_x = population[chromosome_index - len(population)]
-                chromosome_y = population[0]
+        empty_city = City("void", Point(0, 0))
 
-            # Détermination des valeurs à supprimer dans x, tirées de la portion y
-            list_to_replace = chromosome_y.genes[start_xo_index:end_xo_index + 1]
+        # Remplacement de ces valeurs dans x avec des None
+        new_path = [value if value not in list_to_replace else empty_city for value in self._path.cities()]
 
-            # Remplacement de ces valeurs dans x avec des None
-            new_genes_list = [value if value not in list_to_replace else None for value in chromosome_x.genes]
+        # Comptage du nombre de None à droite de la section (pour le décalage)
+        nb_none_right = new_path[end_xo_index + 1:].count(empty_city)
 
-            # Comptage du nombre de None à droite de la section (pour le décalage)
-            nb_none_right = new_genes_list[end_xo_index + 1:].count(None)
+        # Suppression des None dans la liste pour les rotations
+        new_path = [value for value in new_path if value != empty_city]
 
-            # Suppression des None dans la liste pour les rotations
-            new_genes_list = [value for value in new_genes_list if not value == None]
+        # Rotation à droite des éléments
+        for counter in range(0, nb_none_right):
+            new_path.insert(len(new_path), new_path.pop(0))
+        list_to_insert = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
 
-            # Rotation à droite des éléments
-            for counter in range(0, nb_none_right):
-                new_genes_list.insert(len(new_genes_list), new_genes_list.pop(0))
-            list_to_insert = chromosome_y.genes[start_xo_index:end_xo_index + 1]
-
-            # Insertion des valeurs de y dans la section préparée
-            new_genes_list[start_xo_index:start_xo_index] = list_to_insert
-
-            # Ajout du nouveau chromosome à la population
-            population.append(Chromosome(new_genes_list))
-
-        return population
-
-
+        # Insertion des valeurs de y dans la section préparée
+        new_path[start_xo_index:start_xo_index] = list_to_insert
+        child = Solution(Path(new_path))
+        return child
 
     def path(self):
         return self._path
@@ -348,33 +272,38 @@ def ga_solve(file=None, gui=True, maxtime=0):
                     collecting = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
-                    cities.append(City("v" + str(len(cities)), pos[0], pos[1]))
+                    cities.append(City("v" + str(len(cities)), Point(pos[0], pos[1])))
                     draw(cities)
-
 
     # -----------------------
     # Main Loop
     # -----------------------
 
-    population = generate_start_population(cities, 5)
+    population = generate_start_population(cities, 100)
     best_solution = population.get_best_solution()
     same_solution_counter = 0
     start_time = time.time()
     draw(population.get_best_solution())
 
+    i = 0
+
     while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
         population.new_generation()
+        i += 1
         if population.get_best_solution() == best_solution:
             same_solution_counter += 1
         else:
             same_solution_counter = 0
             best_solution = population.get_best_solution()
-            # draw(best_solution)
+            draw(best_solution)
+            print(best_solution.distance())
 
     draw(best_solution)
-    print("DONE")
-    for cit in best_solution.path().cities():
-        print(cit)
+    print("DONE in " + str(i) + " iterations ")
+    # for cit in best_solution.path().cities():
+    #     print(cit)
+
+    print(best_solution.distance())
 
     # ----------------------
     # Boucle pour rester dans l'affichage
