@@ -154,7 +154,8 @@ class Solution:
     def mutate(self):
         cit = self.path().cities()
         index = randint(2, len(cit) - 1)
-        cit[index], cit[1] = cit[1], cit[index]
+        index2 = randint(2, len(cit) - 1)
+        cit[index], cit[index2] = cit[index2], cit[index]
 
     def cross2(self, otherSol):
         cit = self.path().cities()
@@ -186,7 +187,7 @@ class Solution:
         return otherSol
 
     def cross(self, otherSolution):
-        cut_position = randint(2, self.path().get_size() - 2)
+        cut_position = randint(1, self.path().get_size())
 
         self_part_1 = self.path().cities()[0:cut_position]
         for c in otherSolution.path().cities():
