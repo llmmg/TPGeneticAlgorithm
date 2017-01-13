@@ -1,10 +1,9 @@
-import copy
-import sys
-import pygame
 import math
-import random
+import sys
 import time
 from random import randint
+
+import pygame
 
 # GLOBALS FOR GUI
 screen_x = 500
@@ -23,10 +22,13 @@ class City:
         self._point = point
 
     def __str__(self):
-        return self._name + " at position " + str(self._point)
+        return self._name
 
     def __eq__(self, city2):
-        return self._name == city2.name()
+        return self.point() == city2.point()
+
+    def __hash__(self):
+        return hash(self._point, self._name)
 
     def point(self):
         return self._point
@@ -45,6 +47,9 @@ class Point:
 
     def __str__(self):
         return str(self._x) + " ; " + str(self._y)
+
+    def __hash__(self):
+        return hash(self._x, self._y)
 
     def calculate_distance(self, point):
         return math.sqrt((point.x() - self._x) ** 2 + (point.y() - self._y) ** 2)
@@ -66,9 +71,15 @@ class Population:
     def __init__(self, list_solutions):
         self._listSolutions = list_solutions
 
+    def __str__(self):
+        string = ""
+        for solution in self._listSolutions:
+            string += str(solution) + "\n"
+        return string
+
     def new_generation(self):
         pop_size = len(self._listSolutions)
-        self.crossover(int(len(self._listSolutions) / 2))
+        self.crossover(int(len(self._listSolutions)))
         self.mutate()
         self.reduce_population(pop_size)
 
@@ -86,36 +97,35 @@ class Population:
             parent1 = None
             for solution in self._listSolutions:
                 temp_sum += solution.distance()
-                if temp_sum > p0 and parent0 is None:
+                if temp_sum >= p0 and parent0 is None:
                     parent0 = solution
-                if temp_sum > p1 and parent1 is None:
+                if temp_sum >= p1 and parent1 is None:
                     parent1 = solution
+
                 if parent0 is not None and parent1 is not None:
                     break
 
-            child = parent0.cross2(parent1)
-            if child in self._listSolutions:
-                i -= 1
-            else:
+            child = parent0.cross(parent1)
+            if child not in self._listSolutions:
                 self._listSolutions.append(child)
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
     def mutate(self):
-        probability = 10
+        probability = 0
         eliteNumber = 5
         for solution in self._listSolutions[eliteNumber:]:
             if randint(0, 100) <= probability:
                 solution.mutate()
 
     def reduce_population(self, pop_size):
-        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:pop_size]
+        self._listSolutions = self._listSolutions[:pop_size]
 
     def select_elitism(self, number):
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
         return (sorted_list[0:number])[:]
 
     def get_best_solution(self):
-        return sorted(self._listSolutions, key=lambda sol: sol.distance())[0]
+        return self._listSolutions[0]
 
 
 # ----------------------------
@@ -132,8 +142,11 @@ class Path:
         string = ""
         for city in self._cities:
             string += str(city)
-            string += "\t"
+            string += " - "
         return string
+
+    def __hash__(self):
+        return hash(self._cities)
 
     def add_city(self, city):
         self._cities.append(city)
@@ -157,21 +170,28 @@ class Solution:
         self._distance = 0
         self.calculate_distance()
 
-    def __eq__(self, sol2):
-        return self.path().cities() == sol2.path().cities()
+    def __str__(self):
+        return str(self._path) + str(self._distance)
 
+    def __eq__(self, sol2):
+        return self.path() == sol2.path()
+
+    def __hash__(self):
+        return hash(self._path)
+
+    # @profile
     def calculate_distance(self):
         self._distance = 0
-        cities = self.path().cities()
-        for i in range(0, self.path().get_size() - 1):
-            self._distance += cities[i].point().calculate_distance(cities[i + 1].point())
-        # complete the loop
-        self._distance += cities[0].point().calculate_distance(cities[-1].point())
+        old_point = self._path.cities()[-1].point()
+        for city in self._path.cities():
+            self._distance += city.point().calculate_distance(old_point)
+            old_point = city.point()
 
     def mutate(self):
-        index = randint(2, len(self.path().cities()) - 1)
-        index2 = randint(1, len(self.path().cities()) - 2)
-        self.path().cities()[index], self.path().cities()[index2] = self.path().cities()[index2], self.path().cities()[index]
+        for i in range(0, 10):
+            index = randint(1, len(self.path().cities()) - 1)
+            index2 = randint(1, len(self.path().cities()) - 1)
+            self.path().cities()[index], self.path().cities()[index2] = self.path().cities()[index2], self.path().cities()[index]
 
     def cross(self, otherSolution):
 
@@ -188,32 +208,37 @@ class Solution:
         """ Principe global de mutation : Mutation XO.
             Based on Axel Roy implementation
         """
-        start_xo_index = int(len(self._path.cities()) / 2 - len(self._path.cities()) / 4)
-        end_xo_index = int(len(self._path.cities()) / 2 + len(self._path.cities()) / 4)
+        try:
+            start_xo_index = int(len(self._path.cities()) / 2 - len(self._path.cities()) / 4)
+            end_xo_index = int(len(self._path.cities()) / 2 + len(self._path.cities()) / 4)
 
-        # Détermination des valeurs à supprimer dans x, tirées de la portion y
-        list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
+            # Détermination des valeurs à supprimer dans x, tirées de la portion y
+            list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
 
-        empty_city = City("void", Point(0, 0))
+            empty_city = City("void", Point(0, 0))
 
-        # Remplacement de ces valeurs dans x avec des None
-        new_path = [value if value not in list_to_replace else empty_city for value in self._path.cities()]
+            # Remplacement de ces valeurs dans x avec des None
+            new_path = [value if value not in list_to_replace else empty_city for value in self._path.cities()]
 
-        # Comptage du nombre de None à droite de la section (pour le décalage)
-        nb_none_right = new_path[end_xo_index + 1:].count(empty_city)
+            # Comptage du nombre de None à droite de la section (pour le décalage)
+            nb_none_right = new_path[end_xo_index + 1:].count(empty_city)
 
-        # Suppression des None dans la liste pour les rotations
-        new_path = [value for value in new_path if value != empty_city]
+            # Suppression des None dans la liste pour les rotations
+            new_path = [value for value in new_path if value != empty_city]
 
-        # Rotation à droite des éléments
-        for counter in range(0, nb_none_right):
-            new_path.insert(len(new_path), new_path.pop(0))
-        list_to_insert = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
+            # Rotation à droite des éléments
+            for counter in range(0, nb_none_right):
+                new_path.insert(len(new_path), new_path.pop(0))
+            list_to_insert = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
 
-        # Insertion des valeurs de y dans la section préparée
-        new_path[start_xo_index:start_xo_index] = list_to_insert
-        child = Solution(Path(new_path))
-        return child
+            # Insertion des valeurs de y dans la section préparée
+            new_path[start_xo_index:start_xo_index] = list_to_insert
+            p = Path(new_path)
+            child = Solution(p)
+            return child
+
+        except AttributeError:
+            print("There's no item with that code")
 
     def path(self):
         return self._path
@@ -279,7 +304,7 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # Main Loop
     # -----------------------
 
-    population = generate_start_population(cities, 100)
+    population = generate_start_population(cities, 20)
     best_solution = population.get_best_solution()
     same_solution_counter = 0
     start_time = time.time()
@@ -289,6 +314,8 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
     while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
         population.new_generation()
+        print(population)
+        print("------------------")
         i += 1
         if population.get_best_solution() == best_solution:
             same_solution_counter += 1
@@ -296,7 +323,6 @@ def ga_solve(file=None, gui=True, maxtime=0):
             same_solution_counter = 0
             best_solution = population.get_best_solution()
             draw(best_solution)
-            print(best_solution.distance())
 
     draw(best_solution)
     print("DONE in " + str(i) + " iterations ")
