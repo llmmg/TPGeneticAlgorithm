@@ -1,4 +1,3 @@
-import copy
 import sys
 import pygame
 import math
@@ -48,6 +47,7 @@ class Point:
 
     def calculate_distance(self, point):
         return math.sqrt((point.x() - self._x) ** 2 + (point.y() - self._y) ** 2)
+        # return 1
 
     def x(self):
         return self._x
@@ -68,9 +68,11 @@ class Population:
 
     def new_generation(self):
         pop_size = len(self._listSolutions)
-        self.crossover(int(len(self._listSolutions) / 2))
+        self.crossover(int(pop_size /2))
         self.mutate()
         self.reduce_population(pop_size)
+
+
 
     def crossover(self, number_of_children):
         fitness_sum = 0
@@ -98,11 +100,12 @@ class Population:
                 i -= 1
             else:
                 self._listSolutions.append(child)
+
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
     def mutate(self):
-        probability = 10
-        eliteNumber = 5
+        probability = 20
+        eliteNumber = 20
         for solution in self._listSolutions[eliteNumber:]:
             if randint(0, 100) <= probability:
                 solution.mutate()
@@ -154,7 +157,7 @@ class Path:
 class Solution:
     def __init__(self, path):
         self._path = path
-        self._distance = 0
+        # self._distance = 0
         self.calculate_distance()
 
     def __eq__(self, sol2):
@@ -169,9 +172,9 @@ class Solution:
         self._distance += cities[0].point().calculate_distance(cities[-1].point())
 
     def mutate(self):
-        index = randint(2, len(self.path().cities()) - 1)
-        index2 = randint(1, len(self.path().cities()) - 2)
-        self.path().cities()[index], self.path().cities()[index2] = self.path().cities()[index2], self.path().cities()[index]
+        index = randint(2, self.path().get_size() - 1)
+        index2 = randint(1,  self.path().get_size() - 2)
+        self.path()._cities[index], self.path()._cities[index2] = self.path()._cities[index2], self.path()._cities[index]
 
     def cross(self, otherSolution):
 
@@ -279,7 +282,7 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # Main Loop
     # -----------------------
 
-    population = generate_start_population(cities, 100)
+    population = generate_start_population(cities, 30)
     best_solution = population.get_best_solution()
     same_solution_counter = 0
     start_time = time.time()
