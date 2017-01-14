@@ -59,7 +59,7 @@ class Population:
 
     def new_generation(self):
         pop_size = len(self._listSolutions)
-        self.crossover(int(pop_size/2))
+        self.crossover(int(pop_size))
         self.mutate(pop_size)
         self.reduce_population(pop_size)
 
@@ -93,7 +93,8 @@ class Population:
 
     def mutate(self,pop_size):
         probability = 20
-        elite_number = 30
+        # the more, the less solutions may be mutate
+        elite_number = 5
 
         for solution in self._listSolutions[int(pop_size/100*elite_number):]:
             if randint(0, 100) <= probability:
@@ -194,8 +195,8 @@ class Solution:
             Based on Axel Roy implementation
         """
         lenght= len(self._path.cities())
-        start_xo_index = int(lenght / 2 - lenght / 3)
-        end_xo_index = int(lenght / 2 + lenght / 3)
+        start_xo_index = int(lenght / 2 - lenght / 4)
+        end_xo_index = int(lenght / 2 + lenght / 4)
 
         # Détermination des valeurs à supprimer dans x, tirées de la portion y
         list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
@@ -401,5 +402,5 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb010.txt", False)
+    ga_solve("ressources12/data/pb050.txt", False)
     # best for 50 = 2515
