@@ -59,56 +59,51 @@ class Population:
 
     def new_generation(self):
         pop_size = len(self._listSolutions)
-        self.crossover(int(pop_size / 2))
-        self.mutate(pop_size)
+        self.generate_children(int(pop_size / 2))
+        self.do_mutation(pop_size)
         self.reduce_population(pop_size)
 
-    def crossover(self, number_of_children):
-        fitness_sum = 0
-        for solution in self._listSolutions:
-            fitness_sum += solution.distance()
-
-        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
+    def generate_children(self, number_of_children):
         children_list = []
         for i in range(0, number_of_children):
-            temp_sum = 0
-            p0 = randint(0, int(fitness_sum))
-            p1 = randint(0, int(fitness_sum))
-            parent0 = None
-            parent1 = None
-            for solution in self._listSolutions:
-                temp_sum += solution.distance()
-                if temp_sum >= p0 and parent0 is None:
-                    parent0 = solution
-                if temp_sum >= p1 and parent1 is None:
-                    parent1 = solution
-
-                if parent0 is not None and parent1 is not None:
-                    break
+            parent0 = self.select_roulette()
+            parent1 = self.select_roulette()
 
             child = parent0.cross2(parent1)
             if child not in self._listSolutions and child not in children_list:
                 children_list.append(child)
         self._listSolutions.extend(children_list)
 
-    def mutate(self, pop_size):
-        probability = 20
+    def do_mutation(self, pop_size):
+        probability = 100
         elite_number = 30
 
         for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
             if randint(0, 100) <= probability:
                 solution.mutate()
+        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
     def reduce_population(self, pop_size):
-        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:pop_size]
-        '''
-        new_list = self._listSolutions[:int(pop_size/2)]
-        while len(new_list) < pop_size:
-            solution = choice(self._listSolutions)
-            if solution not in new_list:
-                new_list.append(solution)
-        self._listSolutions = sorted(new_list, key=lambda  sol: sol.distance())
-        '''
+        # garder les elites
+        self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:int(pop_size)]
+
+    def select_roulette(self):
+        sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
+
+        fitness_sum = 0
+        for solution in self._listSolutions:
+            fitness_sum += solution.distance()
+
+        roulette = randint(0, int(fitness_sum))
+
+        distance_sum = 0
+        index = 0
+
+        for solution in reversed(sorted_list):
+            distance_sum += solution.distance()
+            if distance_sum >= roulette:
+                return sorted_list[index]
+            index += 1
 
     def get_best_solution(self):
         return self._listSolutions[0]
@@ -129,7 +124,7 @@ class Solution:
             string += str(city)
             string += " - "
 
-        string += self._distance
+        string += str(self._distance)
         return string
 
     def __eq__(self, sol2):
@@ -146,9 +141,9 @@ class Solution:
             old_city = city
 
     def mutate(self):
-        index = randint(1, len(self.cities()) - 1)
-        index2 = randint(1, len(self.cities()) - 1)
-        self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
+        index = randint(1, len(self._cities) - 1)
+        index2 = randint(1, len(self._cities) - 1)
+        self._cities[index], self._cities[index2] = self._cities[index2], self._cities[index]
         self.calculate_distance()
 
     def cross(self, other_solution):
