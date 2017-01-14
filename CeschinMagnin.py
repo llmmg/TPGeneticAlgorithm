@@ -59,6 +59,7 @@ class Population:
 
     def new_generation(self):
         pop_size = len(self._listSolutions)
+
         self.crossover(int(pop_size))
         self.mutate(pop_size)
         self.reduce_population(pop_size)
@@ -91,12 +92,12 @@ class Population:
                 children_list.append(child)
         self._listSolutions.extend(children_list)
 
-    def mutate(self,pop_size):
+    def mutate(self, pop_size):
         probability = 20
         # the more, the less solutions may be mutate
         elite_number = 5
 
-        for solution in self._listSolutions[int(pop_size/100*elite_number):]:
+        for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
             if randint(0, 100) <= probability:
                 solution.mutate()
 
@@ -116,95 +117,69 @@ class Population:
 
 
 # ----------------------------
-# Path
+# Solution
 # ----------------------------
-class Path:
+class Solution:
     def __init__(self, cities):
         self._cities = cities
-
-    def __eq__(self, prob):
-        return self._cities == prob.cities()
+        self._distance = 0
+        self.calculate_distance()
 
     def __str__(self):
         string = ""
         for city in self._cities:
             string += str(city)
             string += " - "
+
+        string += self._distance
         return string
+
+    def __eq__(self, sol2):
+        return self.cities() == sol2.cities()
 
     def __hash__(self):
         return hash(self._cities)
 
-    def add_city(self, city):
-        self._cities.append(city)
-
-    def get_size(self):
-        return len(self._cities)
-
-    def cities(self):
-        return self._cities[:]
-
-    def set_cities(self, newCities):
-        self._cities = newCities
-
-
-# ----------------------------
-# Solution
-# ----------------------------
-class Solution:
-    def __init__(self, path):
-        self._path = path
-        self._distance = 0
-        self.calculate_distance()
-
-    def __str__(self):
-        return str(self._path) + str(self._distance)
-
-    def __eq__(self, sol2):
-        return self.path() == sol2.path()
-
-    def __hash__(self):
-        return hash(self._path)
-
     def calculate_distance(self):
         self._distance = 0
-        old_city = self._path.cities()[-1]
-        for city in self._path.cities():
+        old_city = self.cities()[-1]
+        for city in self.cities():
             self._distance += city.calculate_distance(old_city)
             old_city = city
 
     def mutate(self):
-        index = randint(1, self.path().get_size()-1)
-        index2 = randint(1,  self.path().get_size()-2)
-        self.path()._cities[index], self.path()._cities[index2] = self.path()._cities[index2], self.path()._cities[index]
+        index = randint(1, len(self.cities()) - 1)
+        index2 = randint(1, len(self.cities()) - 1)
+        self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
         self.calculate_distance()
 
-    def cross(self, otherSolution):
+    def cross(self, other_solution):
 
-        cut_position = randint(1, self.path().get_size())
+        cut_position = randint(1, len(self.cities()))
 
-        self_part_1 = self.path().cities()[0:cut_position]
-        for c in otherSolution.path().cities():
+        self_part_1 = self.cities()[0:cut_position]
+        for c in other_solution.cities():
             if c not in self_part_1:
                 self_part_1.append(c)
 
-        return Solution(Path(self_part_1))
+        return Solution(self_part_1)
 
-    def cross2(self, otherSolution):
+    def cross2(self, other_solution):
         """ Principe global de mutation : Mutation XO.
             Based on Axel Roy implementation
         """
-        lenght= len(self._path.cities())
-        start_xo_index = int(lenght / 2 - lenght / 4)
-        end_xo_index = int(lenght / 2 + lenght / 4)
+
+        length = len(self.cities())
+        start_xo_index = int(length / 2 - length / 4)
+        end_xo_index = int(length / 2 + length / 4)
 
         # Détermination des valeurs à supprimer dans x, tirées de la portion y
-        list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
+        list_to_replace = other_solution.cities()[start_xo_index:end_xo_index + 1]
 
         empty_city = City("void", 0, 0)
 
         # Remplacement de ces valeurs dans x avec des None
-        new_path = [value if value not in list_to_replace else empty_city for value in self._path.cities()]
+        new_path = [value if value not in list_to_replace else empty_city for value in self.cities()]
 
         # Comptage du nombre de None à droite de la section (pour le décalage)
         nb_none_right = new_path[end_xo_index + 1:].count(empty_city)
@@ -215,21 +190,20 @@ class Solution:
         # Rotation à droite des éléments
         for counter in range(0, nb_none_right):
             new_path.insert(len(new_path), new_path.pop(0))
-        list_to_insert = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
+        list_to_insert = other_solution.cities()[start_xo_index:end_xo_index + 1]
 
         # Insertion des valeurs de y dans la section préparée
         new_path[start_xo_index:start_xo_index] = list_to_insert
 
         # Rotation pour avoir la meme valeur en 0 (afin d'éviter les doublons style A B C = B C A
-        nb_rotation = new_path.index(self._path.cities()[0])
+        nb_rotation = new_path.index(self.cities()[0])
         new_path = new_path[nb_rotation:] + new_path[:nb_rotation]
 
-        p = Path(new_path)
-        child = Solution(p)
+        child = Solution(new_path)
         return child
 
-    def path(self):
-        return self._path
+    def cities(self):
+        return self._cities
 
     def distance(self):
         return self._distance
@@ -245,14 +219,13 @@ def load_from_file(file):
             cities.append(c)
 
     # add cities by cities with shortest distance
-    shrtCit = []
-    shrtCit.append(cities.pop())
-    while(len(cities)>0):
-        nextCit=find_closest_city(shrtCit[-1], cities)
-        cities.remove(nextCit)
-        shrtCit.append(nextCit)
+    shrt_cit = [cities.pop()]
+    while len(cities) > 0:
+        next_cit = find_closest_city(shrt_cit[-1], cities)
+        cities.remove(next_cit)
+        shrt_cit.append(next_cit)
 
-    return shrtCit
+    return shrt_cit
 
 
 def find_closest_city(city, list_cit):
@@ -348,7 +321,7 @@ def generate_start_population(cities, population_size):
         sol = cities[1:]
         shuffle(sol)
         sol.insert(0, cities[0])
-        new_solution = Solution(Path(sol))
+        new_solution = Solution(sol)
         if new_solution not in solList:
             solList.append(new_solution)
 
@@ -374,12 +347,11 @@ def init_gui():
 def draw(item):
     # item can be a solution or a list of cities
     if type(item) is Solution:
-        list_cities = item.path().cities()
+        list_cities = item.cities()
     else:
         list_cities = item
 
     screen.fill(0)
-    pointlist = []
 
     city_color = [0, 255, 0]
     city_radius = 5
@@ -395,8 +367,6 @@ def draw(item):
         # draw lines
         pygame.draw.line(screen, 0xffffff, (old_city.x(), old_city.y()), (city.x(), city.y()), 1)
         old_city = city
-
-
 
     pygame.display.flip()
 
