@@ -115,40 +115,6 @@ class Population:
 
 
 # ----------------------------
-# Path
-# ----------------------------
-'''class Path:
-    def __init__(self, cities):
-        self._cities = cities
-
-    def __eq__(self, prob):
-        return self._cities == prob.cities()
-
-    def __str__(self):
-        string = ""
-        for city in self._cities:
-            string += str(city)
-            string += " - "
-        return string
-
-    def __hash__(self):
-        return hash(self._cities)
-
-    def add_city(self, city):
-        self._cities.append(city)
-
-    def get_size(self):
-        return len(self._cities)
-
-    def cities(self):
-        return self._cities[:]
-
-    def set_cities(self, newCities):
-        self._cities = newCities
-'''
-
-
-# ----------------------------
 # Solution
 # ----------------------------
 class Solution:
