@@ -59,8 +59,8 @@ class Population:
 
     def new_generation(self):
         pop_size = len(self._listSolutions)
-        self.crossover(int(pop_size))
-        self.mutate()
+        self.crossover(int(pop_size/2))
+        self.mutate(pop_size)
         self.reduce_population(pop_size)
 
     def crossover(self, number_of_children):
@@ -91,11 +91,11 @@ class Population:
                 children_list.append(child)
         self._listSolutions.extend(children_list)
 
-    def mutate(self):
-        probability = 30
-        elite_number = 2
+    def mutate(self,pop_size):
+        probability = 20
+        elite_number = 30
 
-        for solution in self._listSolutions[elite_number:]:
+        for solution in self._listSolutions[int(pop_size/100*elite_number):]:
             if randint(0, 100) <= probability:
                 solution.mutate()
 
@@ -174,7 +174,7 @@ class Solution:
 
     def mutate(self):
         index = randint(1, self.path().get_size()-1)
-        index2 = randint(1,  self.path().get_size()-1)
+        index2 = randint(1,  self.path().get_size()-2)
         self.path()._cities[index], self.path()._cities[index2] = self.path()._cities[index2], self.path()._cities[index]
         self.calculate_distance()
 
@@ -193,8 +193,9 @@ class Solution:
         """ Principe global de mutation : Mutation XO.
             Based on Axel Roy implementation
         """
-        start_xo_index = int(len(self._path.cities()) / 2 - len(self._path.cities()) / 4)
-        end_xo_index = int(len(self._path.cities()) / 2 + len(self._path.cities()) / 4)
+        lenght= len(self._path.cities())
+        start_xo_index = int(lenght / 2 - lenght / 3)
+        end_xo_index = int(lenght / 2 + lenght / 3)
 
         # Détermination des valeurs à supprimer dans x, tirées de la portion y
         list_to_replace = otherSolution.path().cities()[start_xo_index:end_xo_index + 1]
@@ -290,7 +291,7 @@ def ga_solve(file=None, gui=True, maxtime=0):
     # Main Loop
     # -----------------------
 
-    population = generate_start_population(cities, 20)
+    population = generate_start_population(cities, 30)
     best_solution = population.get_best_solution()
     same_solution_counter = 0
     start_time = time.time()
@@ -300,8 +301,8 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
     while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
         population.new_generation()
-        print(population)
-        print("------------------")
+        # print(population)
+        # print("------------------")
         i += 1
         if population.get_best_solution() == best_solution:
             same_solution_counter += 1
@@ -400,5 +401,5 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb050.txt", False)
+    ga_solve("ressources12/data/pb010.txt", False)
     # best for 50 = 2515
