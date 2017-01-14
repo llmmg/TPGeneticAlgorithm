@@ -60,7 +60,7 @@ class Population:
     def new_generation(self):
         pop_size = len(self._listSolutions)
 
-        self.crossover(int(pop_size))
+        self.crossover(pop_size)
         self.mutate(pop_size)
         self.reduce_population(pop_size)
 
@@ -87,19 +87,19 @@ class Population:
                 if parent0 is not None and parent1 is not None:
                     break
 
-            child = parent0.cross2(parent1)
+            child = parent0.cross(parent1)
             if child not in self._listSolutions and child not in children_list:
                 children_list.append(child)
         self._listSolutions.extend(children_list)
 
     def mutate(self, pop_size):
-        probability = 20
+        probability = 10
         # the more, the less solutions may be mutate
         elite_number = 5
 
         for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
             if randint(0, 100) <= probability:
-                solution.mutate()
+                solution.mutate2()
 
     def reduce_population(self, pop_size):
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:pop_size]
@@ -131,7 +131,7 @@ class Solution:
             string += str(city)
             string += " - "
 
-        string += self._distance
+        string += str(self._distance)
         return string
 
     def __eq__(self, sol2):
@@ -151,7 +151,22 @@ class Solution:
         index = randint(1, len(self.cities()) - 1)
         index2 = randint(1, len(self.cities()) - 1)
         self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
+
+        # tests
+        # index = randint(1, len(self.cities()) - 1)
+        # index2 = randint(1, len(self.cities()) - 1)
+        # self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
         self.calculate_distance()
+
+    def mutate2(self):
+        r=randint(1,2)
+        for i in range(0,r):
+            p1 = randint(1, len(self.cities()) - 1)
+            p2 = randint(1, len(self.cities()) - 1)
+            self.cities()[p1:p2] = reversed(self.cities()[p1:p2])
+
+        self.calculate_distance()
+
 
     def cross(self, other_solution):
 
@@ -314,7 +329,7 @@ def generate_start_population(cities, population_size):
     sol = []
 
     # cities is by default "sorted" (see file loading) so add it to solution before mixing
-    # solList.append(Solution(Path(cities)))
+    # solList.append(Solution(cities))
 
     # generate solutions
     for i in range(0, population_size):
@@ -372,5 +387,5 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb050.txt", False)
+    ga_solve("ressources12/data/pb100.txt", False, 60)
     # best for 50 = 2515
