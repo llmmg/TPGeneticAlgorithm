@@ -76,7 +76,8 @@ class Population:
 
     def do_mutation(self, pop_size):
         probability = 100
-        elite_number = 30
+        # the more, the less solutions may be mutate
+        elite_number = 5
 
         for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
             if randint(0, 100) <= probability:
@@ -161,9 +162,10 @@ class Solution:
         """ Principe global de mutation : Mutation XO.
             Based on Axel Roy implementation
         """
+
         length = len(self.cities())
-        start_xo_index = int(length / 2 - length / 3)
-        end_xo_index = int(length / 2 + length / 3)
+        start_xo_index = int(length / 2 - length / 4)
+        end_xo_index = int(length / 2 + length / 4)
 
         # Détermination des valeurs à supprimer dans x, tirées de la portion y
         list_to_replace = other_solution.cities()[start_xo_index:end_xo_index + 1]
