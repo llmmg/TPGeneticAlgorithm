@@ -164,15 +164,6 @@ class Solution:
             self._distance += city.calculate_distance(old_city)
             old_city = city
 
-    def mutate(self):
-        """
-        Mutate a solution by swapping 2 cities
-        """
-        index = randint(1, len(self.cities()) - 1)
-        index2 = randint(1, len(self.cities()) - 1)
-        self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
-
-        self.calculate_distance()
 
     def mutate2(self):
         """
@@ -200,48 +191,6 @@ class Solution:
                 self_part_1.append(c)
 
         return Solution(self_part_1)
-
-    def cross2(self, other_solution):
-        """
-        Cross in 2 points
-        Principe global de mutation : Mutation XO.
-        Based on Axel Roy implementation
-        :param other_solution: other solution to cross with
-        :return: a new solution (child of self and other_solution)
-        """
-
-        length = len(self.cities())
-        start_xo_index = int(length / 2 - length / 4)
-        end_xo_index = int(length / 2 + length / 4)
-
-        # Détermination des valeurs à supprimer dans x, tirées de la portion y
-        list_to_replace = other_solution.cities()[start_xo_index:end_xo_index + 1]
-
-        empty_city = City("void", 0, 0)
-
-        # Remplacement de ces valeurs dans x avec des None
-        new_path = [value if value not in list_to_replace else empty_city for value in self.cities()]
-
-        # Comptage du nombre de None à droite de la section (pour le décalage)
-        nb_none_right = new_path[end_xo_index + 1:].count(empty_city)
-
-        # Suppression des None dans la liste pour les rotations
-        new_path = [value for value in new_path if value != empty_city]
-
-        # Rotation à droite des éléments
-        for counter in range(0, nb_none_right):
-            new_path.insert(len(new_path), new_path.pop(0))
-        list_to_insert = other_solution.cities()[start_xo_index:end_xo_index + 1]
-
-        # Insertion des valeurs de y dans la section préparée
-        new_path[start_xo_index:start_xo_index] = list_to_insert
-
-        # Rotation pour avoir la meme valeur en 0 (afin d'éviter les doublons style A B C = B C A
-        nb_rotation = new_path.index(self.cities()[0])
-        new_path = new_path[nb_rotation:] + new_path[:nb_rotation]
-
-        child = Solution(new_path)
-        return child
 
     def cities(self):
         return self._cities
@@ -383,7 +332,7 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    result = ga_solve("ressources12/data/pb100.txt", False, 20)
+    result = ga_solve("ressources12/data/pb050.txt", False, 20)
     print("distance = " + str(result[0]))
     """collecting = True
     while collecting:
