@@ -93,7 +93,7 @@ class Population:
 
         for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
             if randint(0, 100) <= probability:
-                solution.mutate2()
+                solution.mutate()
 
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
@@ -165,7 +165,7 @@ class Solution:
             old_city = city
 
 
-    def mutate2(self):
+    def mutate(self):
         """
         Mutate a solution by reversing a block of cities. This happens 1 or 2 times (random)
         """
