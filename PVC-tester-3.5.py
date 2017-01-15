@@ -20,7 +20,7 @@ Python 3.5 Ready, Romain Claret
 # Ces modules doivent être dans le PYTHONPATH; p.ex. dans le répertoire courant
 
 modules = (
-	"Claret_Visinand",
+	"CeschinMagnin",
 	# Éventuellement d'autres modules pour comparer plusieurs versions...
 )
 
@@ -72,7 +72,7 @@ def validate(filename, length, path, duration, maxtime):
     retourne une chaîne vide si tout est OK ou un message d'erreur sinon
     '''
     error = ""
-    
+
     if duration>maxtime * (1+tolerance):
         error += "Timeout (%.2f) " % (duration-maxtime)
     try:
@@ -81,14 +81,13 @@ def validate(filename, length, path, duration, maxtime):
         print(sys.exc_info()[0])
         return "(Validation failed...)"
     tovisit = list(cities.keys())
-    
+
     try:
         totaldist = 0
         for (ci, cj) in zip(path, path[1:] +path[0:1]):
-
             totaldist += dist(cities[ci],  cities[cj])
             tovisit.remove(ci)
-            
+
         if int(totaldist) != int(length):
             error += "Wrong dist! (%d instead of %d)" % (length, totaldist)
     except KeyError:
@@ -97,10 +96,10 @@ def validate(filename, length, path, duration, maxtime):
         error += "City %s appears twice in %r! " % (ci, path)
     except Exception as e:
         error += "Error during validation: %r" % e
-    
+
     if tovisit:
         error += "Not all cities visited! %r" % tovisit
-    
+
     return error
 
 
@@ -125,7 +124,7 @@ if __name__ == '__main__':
     # et rapporte les résultats dans outfile
 
     for (filename, maxtime) in tests:
-        if verbose: 
+        if verbose:
             print ("--> %s, %d" % (filename, maxtime))
         # normalisation du nom de fichier (pour l'aspect multi-plateforme)
         filename = os.path.normcase(os.path.normpath(filename))
@@ -133,7 +132,7 @@ if __name__ == '__main__':
         outfile.write("%s (%ds);" % (filename, maxtime))
         # Appel des solveurs proprement dits, vérification et écriture des résultats
         for m in modules:
-            if verbose: 
+            if verbose:
                 print ("## %s" % m)
             try:
                 start = time()

@@ -29,7 +29,7 @@ class City:
         return self._x == city2.x() and self._y == city2.y()
 
     def __hash__(self):
-        return hash(self._x, self._y, self._name)
+        return hash((self._x, self.y, self._name))
 
     def calculate_distance(self, city2):
         return math.sqrt((city2.x() - self._x) ** 2 + (city2.y() - self._y) ** 2)
@@ -75,7 +75,6 @@ class Population:
                 children_list.append(child)
         self._listSolutions.extend(children_list)
 
-
     def do_mutation(self, pop_size):
         probability = 10
         # the more, the less solutions may be mutate
@@ -86,7 +85,6 @@ class Population:
                 solution.mutate2()
 
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
-
 
     def reduce_population(self, pop_size):
         # garder les elites
@@ -153,14 +151,13 @@ class Solution:
         self.calculate_distance()
 
     def mutate2(self):
-        r=randint(1,2)
-        for i in range(0,r):
+        r = randint(1, 2)
+        for i in range(0, r):
             p1 = randint(1, len(self.cities()) - 1)
             p2 = randint(1, len(self.cities()) - 1)
             self.cities()[p1:p2] = reversed(self.cities()[p1:p2])
 
         self.calculate_distance()
-
 
     def cross(self, other_solution):
 
@@ -280,13 +277,8 @@ def ga_solve(file=None, gui=True, maxtime=0):
     start_time = time.time()
     draw(population.get_best_solution())
 
-    i = 0
-
     while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
         population.new_generation()
-        # print(population)
-        # print("------------------")
-        i += 1
         if population.get_best_solution() == best_solution:
             same_solution_counter += 1
         else:
@@ -294,21 +286,7 @@ def ga_solve(file=None, gui=True, maxtime=0):
             best_solution = population.get_best_solution()
             draw(best_solution)
 
-    print("DONE in " + str(i) + " iterations ")
-    print(best_solution.distance())
-
-    # ----------------------
-    # Boucle pour rester dans l'affichage
-    # ----------------------
-    collecting = True
-    while collecting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit(0)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                collecting = False
-    screen.fill(0)
-    pygame.quit()
+    return best_solution.distance(), [city.name() for city in best_solution.cities()]
 
 
 # return a starting population
@@ -381,5 +359,5 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    ga_solve("ressources12/data/pb100.txt", False, 60)
-    # best for 50 = 2515
+    result = ga_solve("ressources12/data/pb100.txt", False)
+    print("distance = " + str(result[0]))
