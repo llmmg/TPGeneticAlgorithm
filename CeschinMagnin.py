@@ -58,6 +58,9 @@ class Population:
         return string
 
     def new_generation(self):
+        """
+        Transform this population into a new one (based on this one)
+        """
         pop_size = len(self._listSolutions)
 
         self.generate_children(int(pop_size))
@@ -65,6 +68,10 @@ class Population:
         self.reduce_population(pop_size)
 
     def generate_children(self, number_of_children):
+        """
+        Generate new solutions and add them to self._listSolutions
+        :param number_of_children: number of children to create
+        """
         children_list = []
         for i in range(0, number_of_children):
             parent0 = self.select_roulette()
@@ -76,6 +83,10 @@ class Population:
         self._listSolutions.extend(children_list)
 
     def do_mutation(self, pop_size):
+        """
+        mutate the solutions (except the elite percentage) with a chance of probability % to happens
+        :param pop_size: size of the population ( without the children )
+        """
         probability = 10
         # the more, the less solutions may be mutate
         elite_number = 10
@@ -87,10 +98,17 @@ class Population:
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
     def reduce_population(self, pop_size):
-        # garder les elites
+        """
+        Reduce the population (keep the bests)
+        :param pop_size: size wanted for the population
+        """
         self._listSolutions = sorted(self._listSolutions, key=lambda sol: sol.distance())[:int(pop_size)]
 
     def select_roulette(self):
+        """
+        Select a solution from self._listSolutions with roulette selection algorithm
+        :return: a city
+        """
         sorted_list = sorted(self._listSolutions, key=lambda sol: sol.distance())
 
         fitness_sum = 0
@@ -137,6 +155,9 @@ class Solution:
         return hash(self._cities)
 
     def calculate_distance(self):
+        """
+        Calculate the distance of this solution
+        """
         self._distance = 0
         old_city = self.cities()[-1]
         for city in self.cities():
@@ -144,6 +165,9 @@ class Solution:
             old_city = city
 
     def mutate(self):
+        """
+        Mutate a solution by swapping 2 cities
+        """
         index = randint(1, len(self.cities()) - 1)
         index2 = randint(1, len(self.cities()) - 1)
         self.cities()[index], self.cities()[index2] = self.cities()[index2], self.cities()[index]
@@ -151,6 +175,9 @@ class Solution:
         self.calculate_distance()
 
     def mutate2(self):
+        """
+        Mutate a solution by reversing a block of cities. This happens 1 or 2 times (random)
+        """
         r = randint(1, 2)
         for i in range(0, r):
             p1 = randint(1, len(self.cities()) - 1)
@@ -160,7 +187,11 @@ class Solution:
         self.calculate_distance()
 
     def cross(self, other_solution):
-
+        """
+        Cross in 1 point
+        :param other_solution: other solution to cross with
+        :return: a new solution (child of self and other_solution)
+        """
         cut_position = randint(1, len(self.cities()))
 
         self_part_1 = self.cities()[0:cut_position]
@@ -171,8 +202,12 @@ class Solution:
         return Solution(self_part_1)
 
     def cross2(self, other_solution):
-        """ Principe global de mutation : Mutation XO.
-            Based on Axel Roy implementation
+        """
+        Cross in 2 points
+        Principe global de mutation : Mutation XO.
+        Based on Axel Roy implementation
+        :param other_solution: other solution to cross with
+        :return: a new solution (child of self and other_solution)
         """
 
         length = len(self.cities())
@@ -216,6 +251,10 @@ class Solution:
 
 
 def load_from_file(file):
+    """
+    :param file: file to load cities from
+    :return: list of cities
+    """
     with open(file, u'r') as f:
         cities = []
         lines = f.readlines()
@@ -224,30 +263,16 @@ def load_from_file(file):
             c = City(name, int(pos_x), int(pos_y))
             cities.append(c)
 
-    # add cities by cities with shortest distance
-    shrt_cit = [cities.pop()]
-    while len(cities) > 0:
-        next_cit = find_closest_city(shrt_cit[-1], cities)
-        cities.remove(next_cit)
-        shrt_cit.append(next_cit)
-
-    return shrt_cit
-
-
-def find_closest_city(city, list_cit):
-    tmp_dist = city.calculate_distance(list_cit[0])
-    closest_city = list_cit[0]
-
-    for cit in list_cit:
-        current_dist = city.calculate_distance(cit)
-        if current_dist < tmp_dist:
-            closest_city = cit
-            tmp_dist = current_dist
-
-    return closest_city
+    return cities
 
 
 def ga_solve(file=None, gui=True, maxtime=0):
+    """
+    :param file: file to load the cities from
+    :param gui: add points trough clicking on the screen ?
+    :param maxtime: maximum resolution time in seconds
+    :return: a tuple of (distance, path) of the best solution
+    """
     cities = []
     init_gui()
     # load cities from file and/or start collecting trough gui
@@ -297,11 +322,10 @@ def generate_start_population(cities, population_size):
     :return: a population (many different solutions)
     """
     # solution list
-    solList = []
-    sol = []
+    sol_list = []
 
     # cities is by default "sorted" (see file loading) so add it to solution before mixing
-    # solList.append(Solution(cities))
+    # sol_list.append(Solution(cities))
 
     # generate solutions
     for i in range(0, population_size):
@@ -309,10 +333,10 @@ def generate_start_population(cities, population_size):
         shuffle(sol)
         sol.insert(0, cities[0])
         new_solution = Solution(sol)
-        if new_solution not in solList:
-            solList.append(new_solution)
+        if new_solution not in sol_list:
+            sol_list.append(new_solution)
 
-    return Population(solList)
+    return Population(sol_list)
 
 
 # ----------------------
@@ -359,5 +383,13 @@ def draw(item):
 
 
 if __name__ == '__main__':
-    result = ga_solve("ressources12/data/pb100.txt", False)
+    result = ga_solve("ressources12/data/pb100.txt", False, 20)
     print("distance = " + str(result[0]))
+    """collecting = True
+    while collecting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                collecting = False
+"""
