@@ -1,3 +1,4 @@
+import argparse
 import math
 import sys
 import time
@@ -11,6 +12,7 @@ screen_y = 500
 window = None
 screen = None
 font = None
+font_color = [100, 100, 100]
 
 
 # ----------------------------
@@ -59,7 +61,10 @@ class Population:
 
     def new_generation(self):
         """
-        Transform this population into a new one (based on this one)
+        Transform this population into a new one (based on this one). This happens in 3 phases:
+        1. add X children to the  population (parents are selected with a roulette selection)
+        2. mutate the population (except the best solutions). This happens with a certain probability
+        3. reduce size of the population to the same size we had before adding the children (remove the worst solutions)
         """
         pop_size = len(self._listSolutions)
 
@@ -69,7 +74,8 @@ class Population:
 
     def generate_children(self, number_of_children):
         """
-        Generate new solutions and add them to self._listSolutions
+        Generate new solutions and add them to self._listSolutions.
+        Parents are selected with a roulette algorithm
         :param number_of_children: number of children to create
         """
         children_list = []
@@ -84,11 +90,11 @@ class Population:
 
     def do_mutation(self, pop_size):
         """
-        mutate the solutions (except the elite percentage) with a chance of probability % to happens
+        Mutate the solutions with a probability to happens
+        This doesnt affect the elite_number percentage of best solutions
         :param pop_size: size of the population ( without the children )
         """
         probability = 10
-        # the more, the less solutions may be mutate
         elite_number = 10
 
         for solution in self._listSolutions[int(pop_size / 100 * elite_number):]:
@@ -204,7 +210,6 @@ class Solution:
     def cross2(self, other_solution):
         """
         Cross in 2 points
-        Principe global de mutation : Mutation XO.
         Based on Axel Roy implementation
         :param other_solution: other solution to cross with
         :return: a new solution (child of self and other_solution)
@@ -274,11 +279,18 @@ def ga_solve(file=None, gui=True, maxtime=0):
     :return: a tuple of (distance, path) of the best solution
     """
     cities = []
-    init_gui()
     # load cities from file and/or start collecting trough gui
     if file is not None:
         cities = load_from_file(file)
-    if gui is True:
+    if gui:
+        init_gui()
+        draw(cities)
+
+        text = font.render("press enter to start", True, font_color)
+        textRect = text.get_rect(centerx=screen.get_width() / 2)
+        screen.blit(text, textRect)
+        pygame.display.flip()
+
         # Loop for collecting cities
         collecting = True
         while collecting:
@@ -300,7 +312,8 @@ def ga_solve(file=None, gui=True, maxtime=0):
     best_solution = population.get_best_solution()
     same_solution_counter = 0
     start_time = time.time()
-    draw(population.get_best_solution())
+    if gui:
+        draw(population.get_best_solution())
 
     while same_solution_counter < 100 and (maxtime == 0 or (time.time() - start_time <= float(maxtime))):
         population.new_generation()
@@ -309,7 +322,8 @@ def ga_solve(file=None, gui=True, maxtime=0):
         else:
             same_solution_counter = 0
             best_solution = population.get_best_solution()
-            draw(best_solution)
+            if gui:
+                draw(best_solution)
 
     return best_solution.distance(), [city.name() for city in best_solution.cities()]
 
@@ -340,7 +354,7 @@ def generate_start_population(cities, population_size):
 
 
 # ----------------------
-# GUI
+# GUI methods
 # ----------------------
 
 def init_gui():
@@ -382,14 +396,55 @@ def draw(item):
     pygame.display.flip()
 
 
+# ----------------------
+# Main
+# ----------------------
 if __name__ == '__main__':
-    result = ga_solve("ressources12/data/pb100.txt", False, 20)
+
+    parser = argparse.ArgumentParser(description='TSP solver with genetic algorithm')
+
+    parser.add_argument('filename', type=argparse.FileType('r'),
+                        help="The file that contains the cities",
+                        nargs="?")
+
+    parser.add_argument('--nogui', action='store_const', dest='gui',
+                        const='1',
+                        help='Disable the GUI')
+
+    parser.add_argument('--maxtime', action='store', dest='maxtime', type=int,
+                        help='Set the maximum execution time')
+
+    # get all parameters
+    args = parser.parse_args()
+
+    # default values
+    p_max_time = 0
+    p_GUI = True
+    p_collecting = False
+
+    if args.maxtime is not None:
+        p_max_time = abs(args.maxtime)
+
+    if args.gui is not None:
+        p_GUI = False
+
+    if args.filename is None:
+        filename = None
+    else:
+        filename = args.filename.name
+
+    result = ga_solve(filename, p_GUI, p_max_time)
+
     print("distance = " + str(result[0]))
-    """collecting = True
-    while collecting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit(0)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                collecting = False
-"""
+    if p_GUI:
+        text = font.render("complete", True, font_color)
+        textRect = text.get_rect(centerx=screen.get_width() / 2, centery=screen.get_height() / 2)
+        screen.blit(text, textRect)
+        pygame.display.flip()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit(0)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    sys.exit(0)
